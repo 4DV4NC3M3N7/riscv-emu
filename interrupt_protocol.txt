@@ -1,0 +1,31 @@
+
+Interrupts signal protocol
+The interrupt Acknowledge signal can be pulled closer together to the interrupt signal,
+but in this case it sipposes that the MTIE register bit field is set to 1, after 2 clock cycles.                          
+
+
+
+I   - Iterrupt signal
+ACK - Acknowledge
+
+CLK             '                            
+-+  +--+  +--+  +--+  +--+  +--+  +--+  +--                                               
+ |  |  |  |  |  |  |  |  |  |  |  |  |  |                                                
+ +--+  +--+  +--+  +--+  +--+  +--+  +--+                                                
+                '                         
+I               '                          
+    +-----------------+     
+    |           '     |    
+----+           '     +---------------------
+                '                         
+ACK             '                             
+                '                         
+                +---------------------------
+                |  
+----------------+  
+                '                          
+                '
+
+
+The device where the interrupt derives will hold the interrupt signal until the ackknowledege
+signal is set to true. The all signal are sampled at the rising edge of the clock. 
