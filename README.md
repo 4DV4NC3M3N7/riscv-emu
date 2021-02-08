@@ -27,6 +27,7 @@ make -j$(nproc)
     <img src="img/img1.PNG" width="400" height="400"> </img>    
     <img src="img/img2.PNG" width="400" height="400"> </img>    
   </p>
+  <img src="img/img3.PNG"> </img>   
 </div>
 
 ### RISCV Code
