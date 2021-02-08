@@ -29,5 +29,8 @@ make -j$(nproc)
   </p>
 </div>
 
+### RISCV Code
+The code that the emulator will be executing is on crt0.s, timer.s and test.c which includes the main function and exeption handler written in C.
+
 ### Known Issues.
 The timer interrupts are not working correctly and if enabled the emulator will glitch on a infinite loop. 
