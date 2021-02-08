@@ -21,7 +21,17 @@ make -j$(nproc)
 ```
   make test
 ```
+## Debug
+The debug.h file contains macros that activate features of the emulator if defined. When `__TRACING__` is enabled, the emulator will print every instruction executed.
+If `__DEBUG__` is enabled, the emulator will print every bus read and writes into the terminal. Finally when `__INS_COUNT__` is defined, the emulator will print on each 
+second the number of instruction executed per second.
+```c
+#define __DEBUG__
+#define __TRACING__
+#define __INS_COUNT__
+```
 
+## Preview
 <div>
   <p align="center">
     <img src="img/img1.PNG" width="400" height="400"> </img>    
