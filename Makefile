@@ -33,6 +33,7 @@ riscv_emu: main.cpp terminal.o core.o memory.o device.o bus.o display.o ext_mem.
 clean:
 	rm *.o
 	rm ROM.bin
+	rm riscv_emu
 
 ROM.bin: script.ld test.c test.s crt0.s timer.s 
 	#riscv64-unknown-elf-as test.s  -march=rv32i -o test.o
