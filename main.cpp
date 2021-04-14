@@ -19,6 +19,7 @@
 #include "debug.h"
 #include "timer/timer.h"
 #include "ext_mem/ext_mem.h"
+#include <argp.h>
 
 char getch(void)
 {
@@ -177,77 +178,132 @@ void generate_steady_clock(TIMER* timer)
     }
 }
 
-int main()
+const char *argp_program_version = "riscv-emu";
+const char *argp_program_bug_address = "<bitglitcher@github.com>";
+static char doc[] = "RISCV Emulator.";
+static char args_doc[] = "[FILENAME]...";
+
+static struct argp_option options[] = { 
+    { "input file", 'f', "FILE", 0, "Place input executable file as <file>."},
+    { "graphical",  'g', 0, 0,      "graphical mode."},
+    { "debug",      'd', 0, 0,      "Debug mode."},
+    { "call trace", 'c', 0, 0,      "Print Call Trace."},
+    { "stack trace",'s', 0, 0,      "Print Stack Trace."},
+    { 0 } 
+};
+
+struct arguments {
+    std::string input_file;
+    std::string debug_file;
+    bool debug;
+    bool graphical;
+    bool call_trace;
+    bool stack_trace;
+    bool step;
+};
+
+static error_t parse_opt(int key, char *arg, struct argp_state *state) {
+    struct arguments *argument = (arguments*)state->input;
+    switch (key) {
+        case 'f': argument->input_file = arg; break;
+        case 'd': argument->debug_file = arg; break;
+        case 'g': argument->graphical = true; break;
+        case 'c': argument->call_trace = true; break;
+        case 's': argument->stack_trace = true; break;
+        //case 'r': argument->raw = true; break;
+        case ARGP_KEY_ARG: argument->input_file = arg; return 0;
+        default: return ARGP_ERR_UNKNOWN;
+    }   
+    return 0;
+}
+
+static struct argp argp = { options, parse_opt, args_doc, doc, 0, 0, 0 };
+
+
+int main(int argc, char *argv[])
 {
+    struct arguments arguments;
+    arguments.graphical = false;
+    arguments.call_trace = false;
+    arguments.stack_trace = false;
+    argp_parse(&argp, argc, argv, 0, 0, &arguments);
 
-    std::cout << "Starting Main\n\n\n\n\n";
-    
-    //Get terminal current state before doing anything weird
-    if(tcgetattr(0, &old_terminal_state) < 0)
-        perror("tcsetattr()");
-
-    std::ifstream binary;
-    binary.open("ROM.bin", std::ifstream::binary);
-
-
-    binary.ignore( std::numeric_limits<std::streamsize>::max() );
-    std::streamsize size = binary.gcount();
-    binary.clear();   //  Since ignore will have set eof.
-    binary.seekg( 0, std::ios_base::beg );
-
-    char* buffer = (char*)malloc(size * sizeof(size));
-
-    memset(buffer, 0x00, size);
-
-    binary.read(buffer, size);
-    
-//
-    BUS bus;
-    MEMORY main_memory(MEMORY_H_ADDR, MEMORY_L_ADDR, MEMORY_H_ADDR);
-    DISPLAY display(DISPLAY_L_ADDR, DISPLAY_H_ADDR, DISPLAY_HEIGHT, DISPLAY_WIDTH);
-    TERMINAL terminal(TERMINAL_ADDR_L, TERMINAL_ADDR_H);
-    TIMER timer(TIMER_L_ADDR, TIMER_H_ADDR);
-    EXT_MEM ext_mem(EXT_L_ADDR, EXT_H_ADDR);
-    bus.add(&main_memory);
-    bus.add(&terminal);
-    bus.add(&display);
-    bus.add(&timer);
-    bus.add(&ext_mem);
-    std::cout << "Loading ROM..." << std::endl;
-    for(int i = 0; i < size;i++)
+    if(arguments.input_file.empty())
     {
-        //std::cout << i << ": " << std::hex << (int)buffer[i] << std::endl;
-        main_memory.write(buffer[i], i);
-        printf("\r%d of %d", i, size);
+        std::cout << "error: no input file\n";
+        exit(1);
     }
-    std::cout << "\nROM Loaded" << std::endl;  
-    
-    CORE core(0x00, &bus, &timer);
-    stop.store(false, std::memory_order_relaxed);
-
-    std::future<void> clock = std::async(&generate_steady_clock, &timer);
-    std::future<void> update_display = std::async(&display_handler, &display); 
-    std::future<void> terminal_handler = std::async(&terminal_input_handler, &terminal.input_buffer); 
-
-    #ifdef __INS_COUNT__
-        signal(SIGALRM, &sigalrm_handler);  // set a signal handler
-        signal(SIGINT, &sig_int_handler);  // set a signal handler for interrupt request
-        alarm(1);  // set an alarm for 10 seconds from now
-    #endif
-
-    while(core.running && (!stop.load(std::memory_order_relaxed)))
+    else
     {
-        core.execute();
-        instruction_counter++;
-    }
-    stop.store(true, std::memory_order_relaxed);
-    update_display.wait();
-    terminal_handler.wait();
-    core.print_tracing();
-    printf("Execution terminated: %d instructions executed\nExiting Main\n", instruction_counter); 
-    std::cout << "Restoring terminal defaults\n";
-    if(tcsetattr(0, TCSADRAIN, &old_terminal_state) < 0)
-        perror("tcsetattr ~ICANON");
 
+        std::cout << "Starting Main\n\n\n\n\n";
+        
+        //Get terminal current state before doing anything weird
+        if(tcgetattr(0, &old_terminal_state) < 0)
+            perror("tcsetattr()");
+
+        std::ifstream binary;
+        binary.open("ROM.bin", std::ifstream::binary);
+
+
+        binary.ignore( std::numeric_limits<std::streamsize>::max() );
+        std::streamsize size = binary.gcount();
+        binary.clear();   //  Since ignore will have set eof.
+        binary.seekg( 0, std::ios_base::beg );
+
+        char* buffer = (char*)malloc(size * sizeof(size));
+
+        memset(buffer, 0x00, size);
+
+        binary.read(buffer, size);
+        
+    //
+        BUS bus;
+        MEMORY main_memory(MEMORY_H_ADDR, MEMORY_L_ADDR, MEMORY_H_ADDR);
+        DISPLAY display(DISPLAY_L_ADDR, DISPLAY_H_ADDR, DISPLAY_HEIGHT, DISPLAY_WIDTH);
+        TERMINAL terminal(TERMINAL_ADDR_L, TERMINAL_ADDR_H);
+        TIMER timer(TIMER_L_ADDR, TIMER_H_ADDR);
+        EXT_MEM ext_mem(EXT_L_ADDR, EXT_H_ADDR);
+        bus.add(&main_memory);
+        bus.add(&terminal);
+        bus.add(&display);
+        bus.add(&timer);
+        bus.add(&ext_mem);
+        std::cout << "Loading ROM..." << std::endl;
+        for(int i = 0; i < size;i++)
+        {
+            //std::cout << i << ": " << std::hex << (int)buffer[i] << std::endl;
+            main_memory.write(buffer[i], i);
+            printf("\r%d of %d", i, size);
+        }
+        std::cout << "\nROM Loaded" << std::endl;  
+        
+        CORE core(0x00, &bus, &timer);
+        stop.store(false, std::memory_order_relaxed);
+
+        std::future<void> clock = std::async(&generate_steady_clock, &timer);
+        std::future<void> update_display = std::async(&display_handler, &display); 
+        std::future<void> terminal_handler = std::async(&terminal_input_handler, &terminal.input_buffer); 
+
+        #ifdef __INS_COUNT__
+            signal(SIGALRM, &sigalrm_handler);  // set a signal handler
+            signal(SIGINT, &sig_int_handler);  // set a signal handler for interrupt request
+            alarm(1);  // set an alarm for 10 seconds from now
+        #endif
+
+        while(core.running && (!stop.load(std::memory_order_relaxed)))
+        {
+            core.execute();
+            instruction_counter++;
+        }
+        stop.store(true, std::memory_order_relaxed);
+        update_display.wait();
+        terminal_handler.wait();
+        core.print_tracing();
+        printf("Execution terminated: %d instructions executed\nExiting Main\n", instruction_counter); 
+        std::cout << "Restoring terminal defaults\n";
+        if(tcsetattr(0, TCSADRAIN, &old_terminal_state) < 0)
+            perror("tcsetattr ~ICANON");
+    }
     return 0;
 }
