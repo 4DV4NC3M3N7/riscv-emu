@@ -114,8 +114,8 @@ _start:
     sw t1, 0(t0)
     
     #enable machine timer interrupt
-    li t0, 0b10000000
-    csrs mie, t0
+    #li t0, 0b10000000
+    #csrs mie, t0
 
     jal ra, main
 
