@@ -35,6 +35,26 @@ MEMORY::MEMORY(int initial_size, uint32_t min_address, uint32_t max_address)
     //}
 }
 
+//Initialize memory at address with data on buffer
+void MEMORY::initalize(uint32_t addr, char* buff, size_t buff_size)
+{
+    //Allocate sections
+    MEM_BLOCK new_block;
+
+    for(int i = (min_address >> mask); i < (buff_size >> mask);i++)
+    {
+        new_block.memory_region = i;
+        new_block.memory = new std::vector<int8_t>(MEM_BYTES);
+        vector_mem.push_back(new_block);
+    }
+    int address_mask = (int)(pow(2, mask) - 1);
+    for(int i = min_address; i < buff_size;i++)
+    {
+        vector_mem[i>>mask].memory->operator[](i&address_mask) = buff[(i-min_address)];
+    }
+
+}
+
 MEMORY::~MEMORY()
 {
     //Delete initialized vectors
