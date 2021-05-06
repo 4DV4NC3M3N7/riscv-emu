@@ -36,24 +36,25 @@ EXT_MEM::EXT_MEM(uint32_t min_address, uint32_t max_address)
 
 EXT_MEM::~EXT_MEM()
 {
-    std::fstream file;
-    file.open("external_memory.bin", std::fstream::in | std::fstream::out | std::fstream::binary);
-    if(mem_buffer)
-    {
-        if(file.is_open())
-        {
-            file.seekg(file.end);
-            size_t size = file.tellg();
-            file.seekg(file.beg);
-            //Write buffer back
-            if(max_used > size) file.write(mem_buffer, ((max_used-min_address)));
-            else file.write(mem_buffer, size);
-            file.close();
-        }
-        delete mem_buffer;
-        //Write contents back
-
-    }
+    //For now dont write back
+    //std::fstream file;
+    //file.open("external_memory.bin", std::fstream::in | std::fstream::out | std::fstream::binary);
+    //if(mem_buffer)
+    //{
+    //    if(file.is_open())
+    //    {
+    //        file.seekg(file.end);
+    //        size_t size = file.tellg();
+    //        file.seekg(file.beg);
+    //        //Write buffer back
+    //        if(max_used > size) file.write(mem_buffer, ((max_used-min_address)));
+    //        else file.write(mem_buffer, size);
+    //        file.close();
+    //    }
+    //    delete mem_buffer;
+    //    //Write contents back
+//
+    //}
 }
 
 uint8_t EXT_MEM::read(uint32_t addr)

@@ -1,6 +1,6 @@
 CFLAGS=-lsfml-graphics -lsfml-window -lsfml-system -lpthread -g
 
-all: terminal.o core.o memory.o device.o bus.o display.o ext_mem.o timer.o riscv_emu
+all: terminal.o core.o memory.o device.o bus.o display.o ext_mem.o timer.o elf.o elf_tables.o riscv_emu
 
 terminal.o: terminal/terminal.cpp terminal/terminal.h debug.h
 	g++ terminal/terminal.cpp -c
@@ -26,8 +26,15 @@ ext_mem.o: ext_mem/ext_mem.cpp ext_mem/ext_mem.h
 timer.o: timer/timer.h timer/timer.cpp
 	g++ timer/timer.cpp -c
 
-riscv_emu: main.cpp terminal.o core.o memory.o device.o bus.o display.o ext_mem.o timer.o debug.h
-	g++ main.cpp terminal.o memory.o core.o bus.o device.o display.o ext_mem.o timer.o $(CFLAGS) -o riscv_emu
+elf.o: elf/elf.h elf/elf.cpp
+	g++ elf/elf.cpp elf/elf_tables.cpp -c
+
+elf_tables.o:
+	g++ elf/elf_tables.cpp -c
+
+
+riscv_emu: main.cpp terminal.o core.o memory.o device.o bus.o display.o ext_mem.o timer.o debug.h elf.o elf_tables.o
+	g++ main.cpp terminal.o memory.o core.o bus.o device.o display.o ext_mem.o timer.o elf.o elf_tables.o $(CFLAGS) -o riscv_emu
 
 
 clean:
@@ -38,11 +45,11 @@ clean:
 ROM.bin: script.ld test.c test.s crt0.s timer.s 
 	#riscv64-unknown-elf-as test.s  -march=rv32i -o test.o
 	#riscv64-unknown-elf-ld -L="/mnt/c/Users/camin/Documents/opt/riscv/lib/gcc/riscv64-unknown-elf/10.2.0/rv32i/ilp32" -b elf32-littleriscv -m elf32lriscv -T script.ld test.o crt0.o -o test_linked.o
-	riscv64-unknown-elf-gcc -Wl,--print-memory-usage -T script.ld -lm -lgcc -static -march=rv32i -mabi=ilp32 -nostartfiles -ffreestanding -fpic crt0.s timer.s -O0 test.c -o test_linked.o
+	riscv64-unknown-elf-gcc -Wl,--print-memory-usage -T script.ld -lm -lgcc -static -march=rv32i -mabi=ilp32 -nostartfiles -ffreestanding -fpic -g crt0.s timer.s -O0 test.c -o test_linked.o
 	riscv64-unknown-elf-objcopy -F elf32-littleriscv test_linked.o -O binary ROM.bin
 	python3 generate_rom.py > ROM.hex
 
 #xxd ROM.bin
 test: ROM.bin riscv_emu
 	#riscv64-unknown-elf-objdump -ds test_linked.o
-	./riscv_emu
+	./riscv_emu test_linked.o
