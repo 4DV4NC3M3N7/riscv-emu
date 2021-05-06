@@ -114,11 +114,7 @@ _start:
     sw t1, 0(t0)
     
     #enable machine timer interrupt
-<<<<<<< HEAD
-    li t0, 0b10000000
-=======
     #li t0, 0b10000000
->>>>>>> elf_implementation
     #csrs mie, t0
 
     jal ra, main
