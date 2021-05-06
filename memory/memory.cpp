@@ -3,6 +3,7 @@
 #include <math.h>
 #include <ncurses.h>
 #include <iostream>
+#include <algorithm>
 #include <iomanip>
 #include "../debug.h"
 
@@ -36,29 +37,31 @@ MEMORY::MEMORY(int initial_size, uint32_t min_address, uint32_t max_address)
 }
 
 //Initialize memory at address with data on buffer
-void MEMORY::initalize(uint32_t addr, char* buff, size_t buff_size)
+bool MEMORY::initalize(uint32_t addr, char* buff, size_t buff_size)
 {
-    //Allocate sections
-    MEM_BLOCK new_block;
-
-    for(int i = (min_address >> mask); i < (buff_size >> mask);i++)
+    if(buff)
     {
-        new_block.memory_region = i;
-        new_block.memory = new std::vector<int8_t>(MEM_BYTES);
-        vector_mem.push_back(new_block);
+        if((buff_size + addr) >= max_address) return false; //Cannot initialize
+        printf("Trying to initialize at Address %08x, buff_size %08x\n", addr, buff_size);
+        
+        for(int i = addr; i < buff_size;i++)
+        {
+            write(buff[i], i);
+        }
+        return true;
     }
-    int address_mask = (int)(pow(2, mask) - 1);
-    for(int i = min_address; i < buff_size;i++)
+    else
     {
-        vector_mem[i>>mask].memory->operator[](i&address_mask) = buff[(i-min_address)];
+        return false;
     }
+    
 
 }
 
 MEMORY::~MEMORY()
 {
     //Delete initialized vectors
-    for(size_t i = 0;i <= vector_mem.size();i++)
+    for(size_t i = 0;i < vector_mem.size();i++)
     {
         if(vector_mem[i].memory)
         {

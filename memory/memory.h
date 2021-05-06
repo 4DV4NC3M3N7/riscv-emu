@@ -20,14 +20,14 @@ class MEMORY : public device
 {
     public:
         MEMORY(int initial_size, uint32_t min_address, uint32_t max_address);
-        void initalize(uint32_t addr, char* buff, size_t buff_size);
+        bool initalize(uint32_t addr, char* buff, size_t buff_size);
         uint8_t read(uint32_t addr);
         void write(uint8_t data, uint32_t addr);
         ~MEMORY();
     private:
         /* data */
         std::vector<MEM_BLOCK> vector_mem; 
-        MEM_BLOCK* last_used;
+        MEM_BLOCK* last_used = nullptr;
         int mask;
 };
 
