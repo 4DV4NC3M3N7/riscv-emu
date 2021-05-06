@@ -484,8 +484,6 @@ int main()
     //memset((char*)DISPLAY_L_ADDR, 0, DISPLAY_H_ADDR);
     //for(int i = (0-DISPLAY_WIDTH);i <= DISPLAY_WIDTH;i++) plot_point(i, (s)*i+4);
     //plot_line(50, 50, 0, 0);
-    
-    memset((char*)EXT_L_ADDR, 'B', 2);
 
     last = _get_time();
 
@@ -499,12 +497,10 @@ int main()
     print("Date: 1/16/2021\n");
     print("8:04AM\n");
 
-    while(0)
-    {
-      sprintf(buffer, "Time: 0x%016llx -> Up time: %016llu\r", (uint64_t)((_get_time()-last)/0x04000),  (uint64_t)_get_time());
-      draw_str(buffer);
-      print(buffer);
-    }
+    for(int i = 0; i < 0xffff;i++);
+    
+
+    clear_screen();
 
 
     pixel_t color;
@@ -521,10 +517,10 @@ int main()
         //{
         //  *((char*)TERMINAL_ADDR_L) = *i;
         //}
-        //color.r = (rand() % 0xff);
-        //color.g = (rand() % 0xff);
-        //color.b = (rand() % 0xff);
-        //color.a = (rand() % 0xff);
+        color.r = (rand() % 0xff);
+        color.g = (rand() % 0xff);
+        color.b = (rand() % 0xff);
+        color.a = (rand() % 0xff);
             //asm("ecall");
             //sprintf(buffer, "0x%08x -> 0x%08x 0x%08x:0x%08x\r", &i, i, (&i)+(i), rand());
         //for(int x = 0;x <= 0xff;x++);
@@ -535,7 +531,7 @@ int main()
             draw_str(buffer);
         }
             i = i + 1;
-        //draw_line_fixed_color(rand() % 500, rand() % 500, rand() % 500, rand() % 500, color); 
+        draw_line_fixed_color(rand() % 500, rand() % 500, rand() % 500, rand() % 500, color); 
       }
     //print("Waiting for interrupt\n");
   return 0xfffff;
