@@ -18,6 +18,8 @@
 #include <termios.h>
 #include "debug.h"
 #include "timer/timer.h"
+#include "elf/elf.h"
+#include "elf/elf_tables.h"
 #include "ext_mem/ext_mem.h"
 #include <argp.h>
 
@@ -199,6 +201,9 @@ struct arguments {
     bool graphical;
     bool call_trace;
     bool stack_trace;
+    bool exec_trace;
+    bool device_access;
+    bool fast_exec_trace;
     bool step;
 };
 
@@ -210,6 +215,9 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
         case 'g': argument->graphical = true; break;
         case 'c': argument->call_trace = true; break;
         case 's': argument->stack_trace = true; break;
+        case 'e': argument->exec_trace = true; break;
+        case 'D': argument->device_access = true; break;
+        case 'F': argument->fast_exec_trace = true; break;
         //case 'r': argument->raw = true; break;
         case ARGP_KEY_ARG: argument->input_file = arg; return 0;
         default: return ARGP_ERR_UNKNOWN;
@@ -242,9 +250,9 @@ int main(int argc, char *argv[])
         if(tcgetattr(0, &old_terminal_state) < 0)
             perror("tcsetattr()");
 
-        std::ifstream binary;
-        binary.open("ROM.bin", std::ifstream::binary);
 
+        std::ifstream binary;
+        binary.open(arguments.input_file, std::ifstream::binary);
 
         binary.ignore( std::numeric_limits<std::streamsize>::max() );
         std::streamsize size = binary.gcount();
@@ -252,12 +260,14 @@ int main(int argc, char *argv[])
         binary.seekg( 0, std::ios_base::beg );
 
         char* buffer = (char*)malloc(size * sizeof(size));
+        //char* buffer = (char*)calloc(size, sizeof(char));
 
         memset(buffer, 0x00, size);
 
         binary.read(buffer, size);
+
+        elf_reader reader(buffer, size);
         
-    //
         BUS bus;
         MEMORY main_memory(MEMORY_H_ADDR, MEMORY_L_ADDR, MEMORY_H_ADDR);
         DISPLAY display(DISPLAY_L_ADDR, DISPLAY_H_ADDR, DISPLAY_HEIGHT, DISPLAY_WIDTH);
@@ -267,21 +277,36 @@ int main(int argc, char *argv[])
         bus.add(&main_memory);
         bus.add(&terminal);
         bus.add(&display);
-        bus.add(&timer);
+        //bus.add(&timer);
         bus.add(&ext_mem);
         std::cout << "Loading ROM..." << std::endl;
-        for(int i = 0; i < size;i++)
+
+
+        //Read program headers and initialize into memory
+        for(int i = 0;i < reader.elf32_ehdr.e_phnum;i++)
         {
-            //std::cout << i << ": " << std::hex << (int)buffer[i] << std::endl;
-            main_memory.write(buffer[i], i);
-            printf("\r%d of %d", i, size);
+            if(reader.elf32_phdr[i].p_type == PT_LOAD)
+            {
+                //In this case it would be the physical address into memory, because the emulator doesnt support virtual memory yet
+                if(main_memory.initalize(reader.elf32_phdr[i].p_paddr, reader.get_ph_buffer(i), reader.elf32_phdr[i].p_filesz))
+                {
+                    std::cout << "Couln't initialize Section at Address: " << std::hex << reader.elf32_phdr[i].p_paddr << "\n";
+                }
+            }
         }
-        std::cout << "\nROM Loaded" << std::endl;  
+
+        //for(int i = 0; i < size;i++)
+        //{
+        //    //std::cout << i << ": " << std::hex << (int)buffer[i] << std::endl;
+        //    main_memory.write(buffer[i], i);
+        //    printf("\r%d of %d", i, size);
+        //}
+        //std::cout << "\nROM Loaded" << std::endl;  
         
-        CORE core(0x00, &bus, &timer);
+        CORE core(reader.elf32_ehdr.e_entry, &bus, &timer);
         stop.store(false, std::memory_order_relaxed);
 
-        std::future<void> clock = std::async(&generate_steady_clock, &timer);
+        //std::future<void> clock = std::async(&generate_steady_clock, &timer);
         std::future<void> update_display = std::async(&display_handler, &display); 
         std::future<void> terminal_handler = std::async(&terminal_input_handler, &terminal.input_buffer); 
 
