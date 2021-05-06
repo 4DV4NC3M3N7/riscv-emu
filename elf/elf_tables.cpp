@@ -1,4 +1,6 @@
 #include <vector>
+#include <map>
+
 #include "elf.h"
 
 std::vector<e_machine_entry_t> e_machine_table =
@@ -213,6 +215,7 @@ std::map<uint32_t, std::string> e_version_table =
     {1, "EV_CURRENT"} //Current version
 };
 
+//Section header type string table
 std::map<uint32_t, std::string> sh_type_table =
 {
     {0, "SHT_NULL"},
@@ -231,4 +234,32 @@ std::map<uint32_t, std::string> sh_type_table =
     {0x7fffffff, "SHT_HIPROC"},
     {0x80000000, "SHT_LOUSER"},
     {0xffffffff, "SHT_HIUSER"}
+};
+
+
+std::map<uint32_t, std::string> p_type_table =
+{
+    {0, "PT_NULL"},
+    {1, "PT_LOAD"},
+    {2, "PT_DYNAMIC"},
+    {3, "PT_INTERP"},
+    {4, "PT_NOTE"},
+    {5, "PT_SHLIB"},
+    {6, "PT_PHDR"},
+    {0x70000000, "PT_LOPROC"},
+    {0x7fffffff, "PT_HIPROC"},
+};
+
+
+
+//Special Section header indexes
+std::map<uint32_t, std::string> sh_index_table =
+{
+    {0, "SHN_UNDEF"},
+    {0xff00, "SHN_LORESERVE"},
+    {0xff00, "SHN_LOPROC"},
+    {0xff1f, "SHN_HIPROC"},
+    {0xfff1, "SHN_ABS"},
+    {0xfff2, "SHN_COMMON"},
+    {0xffff, "SHN_HIRESERVE"}
 };
