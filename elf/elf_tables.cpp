@@ -263,3 +263,13 @@ std::map<uint32_t, std::string> sh_index_table =
     {0xfff2, "SHN_COMMON"},
     {0xffff, "SHN_HIRESERVE"}
 };
+
+
+std::map<uint32_t, std::string> st_bind_table =
+{
+    {0, "STB_LOCAL"},
+    {1, "STB_GLOBAL"},
+    {2, "STB_WEAK"},
+    {13, "STB_LOPROC"},
+    {15, "STB_HIPROC"}
+}

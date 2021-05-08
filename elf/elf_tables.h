@@ -14,4 +14,6 @@ extern std::map<uint32_t, std::string> sh_type_table;
 extern std::map<uint32_t, std::string> p_type_table;
 extern std::map<uint32_t, std::string> sh_index_table;
 extern std::map<uint32_t, std::string> sh_type_table;
+extern std::map<uint32_t, std::string> st_bind_table;
+
 #endif
