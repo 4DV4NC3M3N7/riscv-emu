@@ -16,6 +16,7 @@ Date: 10/27/2020
 #include "inset.h"
 #include "../timer/timer.h"
 #include "interrupt.h"
+#include "../elf/elf.h"
 
 #define SIGNEX(v, sb) ((v) | (((v) & (1 << (sb))) ? ~((1 << (sb))-1) : 0))
 
@@ -60,6 +61,16 @@ typedef struct
     std::string name;
 } ins_trace_t;
 
+
+typedef struct
+{
+    bool call_trace;
+    bool stack_trace;
+    bool exec_trace;
+    bool device_access;
+    bool fast_exec_trace;
+} debug_options_t;
+
 class CORE
 {
     public:
@@ -74,6 +85,9 @@ class CORE
     void print_ccr();
     void print_regs();
     uint32_t get_reg(int);
+
+    void attach_debug_symbols(std::vector<symbol32_t>* symbol_table);
+    void debug_options(debug_options_t debug_options);
 
     uint8_t get_ins_opcode(uint8_t data);
     bool running;
@@ -104,6 +118,7 @@ class CORE
     //Core tracing
     std::vector <ins_trace_t> trace_buffer;
     std::vector <std::string> str_trace_buffer;
+    std::vector<symbol32_t>* symbol_table;
 };
 
 
