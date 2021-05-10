@@ -1,6 +1,19 @@
 # riscv-emu
 RISCV RV32I emulator written in C++ and using SMFL for handling the window. The emulator support the RV32I ISA extention and the M-Mode Privilege mode with timer interrupt support. Memory Protection Register are not implemented.
 
+### Goals
+
+One of the goals of this program is to have a TUI and a GUI. To which interface with it. But most importantly is to support the while privilege spec. Currently progress is being made into the TUI and GUI part of it.
+
+- <s>Machine Mode</s>
+- <s>ELF File Support</s>
+- Supervirory Mode
+- User Mode
+- TUI <= In progress
+- GUI <= In progress
+- ELF File support
+- Tracing function calls <= In progress (Basic Support implemented)
+
 ## Dependecies
 ```
 sudo apt-get update
@@ -21,6 +34,7 @@ make -j$(nproc)
 ```
   make test
 ```
+
 ## Debug
 The debug.h file contains macros that activate features of the emulator if defined. When `__TRACING__` is enabled, the emulator will print every instruction executed.
 If `__DEBUG__` is enabled, the emulator will print every bus read and writes into the terminal. Finally when `__INS_COUNT__` is defined, the emulator will print on each 
