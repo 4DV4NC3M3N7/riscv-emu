@@ -5,6 +5,7 @@
 #include "inset.h"
 #include <bitset>
 #include <iostream>
+#include <algorithm>
 #include <ios>
 #include <stdlib.h>
 #include "../debug.h"
@@ -15,9 +16,10 @@
 
 CORE::CORE(uint32_t startup_vector, BUS* bus, TIMER* timer)
 {
-    //this->PC = startup_vector;
+    this->PC = startup_vector;
     this->bus = bus;
     this->timer = timer;
+    this->symbol_table = nullptr;
     running = true;
     for(int i = 0;i <= 31;i++)
     {
@@ -680,14 +682,31 @@ void CORE::execute()
             PC += 0x4;
             break;
         case JAL_OP:
-            //std::cout << "JAL Executed" << std::endl;
-            REGS[RD_DECODE(data_fetch)] = PC + 4;
-            PC += (int32_t)SIGNEX(UJ_IMM_DECODE(data_fetch), 20);
+            {
+                //std::cout << "JAL Executed" << std::endl;
+                REGS[RD_DECODE(data_fetch)] = PC + 4;
+                //symbol32_t* ref;
+                PC += (int32_t)SIGNEX(UJ_IMM_DECODE(data_fetch), 20);
+                std::vector<symbol32_t>::iterator entry = std::find_if(symbol_table->begin(), symbol_table->end(), [&](const symbol32_t& symbol32)->bool{
+                    return (symbol32.value == PC)? true : false; });
+                if(entry != symbol_table->end())
+                {
+                    printf("Function called %s\n", entry->name.c_str());
+                }
+            }
             break;
         case JALR_OP:
-            //std::cout << "JALR Executed" << std::endl;
-            REGS[RD_DECODE(data_fetch)] = PC + 4;
-            PC = REGS[RS1_DECODE(data_fetch)] + (int32_t)(SIGNEX(IMM12_DECODE(data_fetch), 11));
+            {
+                //std::cout << "JALR Executed" << std::endl;
+                REGS[RD_DECODE(data_fetch)] = PC + 4;
+                PC = REGS[RS1_DECODE(data_fetch)] + (int32_t)(SIGNEX(IMM12_DECODE(data_fetch), 11));
+                std::vector<symbol32_t>::iterator entry = std::find_if(symbol_table->begin(), symbol_table->end(), [&](const symbol32_t& symbol32)->bool{
+                    return (symbol32.value == PC)? true : false; });
+                if(entry != symbol_table->end())
+                {
+                    printf("Function called %s\n", entry->name.c_str());
+                }
+            }
             break;
         case BRANCH:
             switch (FUNC3_DECODE(data_fetch))
@@ -1084,4 +1103,9 @@ void CORE::execute()
 uint8_t CORE::get_ins_opcode(uint8_t data)
 {
     return 0x000;
+}
+
+void CORE::attach_debug_symbols(std::vector<symbol32_t>* symbol_table)
+{
+    this->symbol_table = symbol_table;
 }

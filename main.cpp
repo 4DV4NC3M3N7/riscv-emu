@@ -281,14 +281,13 @@ int main(int argc, char *argv[])
         bus.add(&ext_mem);
         std::cout << "Loading ROM..." << std::endl;
 
-
         //Read program headers and initialize into memory
         for(int i = 0;i < reader.elf32_ehdr.e_phnum;i++)
         {
             if(reader.elf32_phdr[i].p_type == PT_LOAD)
             {
                 //In this case it would be the physical address into memory, because the emulator doesnt support virtual memory yet
-                if(main_memory.initalize(reader.elf32_phdr[i].p_paddr, reader.get_ph_buffer(i), reader.elf32_phdr[i].p_filesz))
+                if(main_memory.initalize(reader.elf32_phdr[i].p_paddr, reader.get_ph_buffer(i), reader.elf32_phdr[i].p_filesz) == false)
                 {
                     std::cout << "Couln't initialize Section at Address: " << std::hex << reader.elf32_phdr[i].p_paddr << "\n";
                 }
@@ -304,6 +303,8 @@ int main(int argc, char *argv[])
         //std::cout << "\nROM Loaded" << std::endl;  
         
         CORE core(reader.elf32_ehdr.e_entry, &bus, &timer);
+        std::vector<symbol32_t>* dumped = reader.dump_symbols();
+        core.attach_debug_symbols(dumped);
         stop.store(false, std::memory_order_relaxed);
 
         //std::future<void> clock = std::async(&generate_steady_clock, &timer);
