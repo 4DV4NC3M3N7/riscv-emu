@@ -157,6 +157,16 @@ extern std::vector<e_machine_entry_t> e_machine_table;
 extern std::map<uint32_t, std::string> e_type_table;
 extern std::map<uint32_t, std::string> e_version_table;
 
+typedef struct
+{
+    std::string name;
+    uint32_t value;  
+    uint32_t size;  
+    uint8_t info;  
+    uint8_t other;   
+    uint16_t shndx;  
+} symbol32_t;
+
 class elf_reader
 {
     public:
@@ -167,10 +177,12 @@ class elf_reader
         bool is_machine(std::string arch_name); //Check machine name
         bool is_64(); //Chech if machine is 64bits
         bool is_32(); //Chech if machine is 32bits
-        char* string_table(Elf32_Word index); //Access header string table
+        char* string_table(Elf32_Word offset); //Access string table
         uint32_t get_entry32(); //Return Entry Address
         
         std::vector<Elf32_Phdr>* get_loadable(); //Return a vector containing loadable program headers
+        
+        std::vector<symbol32_t>* dump_symbols();
         
         //Returns a pointer to the data specified by the program header and index i
         char* get_ph_buffer(size_t i); 
@@ -180,6 +192,7 @@ class elf_reader
         Elf32_Shdr* elf32_shdr; //All headers
         Elf32_Sym* elf32_sym; //All symbols
         Elf32_Phdr* elf32_phdr; //All symbols
+        int32_t strtab_index; //All symbols
         
         char* file_data;
     private:

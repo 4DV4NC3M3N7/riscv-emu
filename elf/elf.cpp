@@ -1,5 +1,6 @@
 #include "elf.h"
 #include "elf_tables.h"
+#include <string.h>
 #include <algorithm>
 
 elf_reader::elf_reader(char* buffer, int size)
@@ -80,7 +81,7 @@ elf_reader::elf_reader(char* buffer, int size)
         std::cout << ANSI_COLOR_RESET "elf32_ehdr.e_shstrndx: " ANSI_COLOR_GREEN "ANSI_COLOR_GREEN\n";
         std::cout << ANSI_COLOR_RESET "\n\n\n\n";
         //Print the read data
-        memcpy(&elf32_ehdr, buffer, sizeof(elf32_ehdr));
+        memcpy(&elf32_ehdr, file_data, sizeof(elf32_ehdr));
         int x = 0;
         int olds = 0;
         std::cout << colors[x];
@@ -98,7 +99,7 @@ elf_reader::elf_reader(char* buffer, int size)
                 if(x < 14) x++;
                 std::cout << colors[x];
             }
-            printf("0x%02x ", buffer[i] & 0xff);
+            printf("0x%02x ", file_data[i] & 0xff);
             row++;
         }
         printf(ANSI_COLOR_RESET);
@@ -128,13 +129,13 @@ elf_reader::elf_reader(char* buffer, int size)
         
         //Allocate all header sections
         elf32_shdr = new Elf32_Shdr[elf32_ehdr.e_shnum];
-        memcpy(elf32_shdr, &buffer[elf32_ehdr.e_shoff], elf32_ehdr.e_shnum * elf32_ehdr.e_shentsize);
+        memcpy(elf32_shdr, &file_data[elf32_ehdr.e_shoff], elf32_ehdr.e_shnum * elf32_ehdr.e_shentsize);
 
         for(int i = 0; i < elf32_ehdr.e_shnum;i++)
         {
             //print word
             //mempcpy(&elf32_sym, (buffer + elf32_ehdr.e_shstrndx)[elf32_shdr[i].sh_name * elf32_shdr].st_name, sizeof(Elf32_Sym));
-            printf("name %s\n", &buffer[elf32_shdr[elf32_ehdr.e_shstrndx].sh_offset] + elf32_shdr[i].sh_name);
+            printf("name %s\n", &file_data[elf32_shdr[elf32_ehdr.e_shstrndx].sh_offset] + elf32_shdr[i].sh_name);
         }
         
         e_machine_entry_t e_machine_entry {243,   "EM_RISCV",         "RISC-V"};
@@ -155,7 +156,7 @@ elf_reader::elf_reader(char* buffer, int size)
         elf32_phdr = new Elf32_Phdr[elf32_ehdr.e_phnum];
 
         //Now initialize all program headers
-        memcpy(elf32_phdr, &buffer[elf32_ehdr.e_phoff], elf32_ehdr.e_phnum * elf32_ehdr.e_phentsize);
+        memcpy(elf32_phdr, &file_data[elf32_ehdr.e_phoff], elf32_ehdr.e_phnum * elf32_ehdr.e_phentsize);
 
 
         printf("Type\tOffset\t\tVirtAddr\t\tPhysAddr\t\tFileSiz\t\tMemSiz\t\tFlg Align\n");   
@@ -173,7 +174,37 @@ elf_reader::elf_reader(char* buffer, int size)
             );
                 // /elf32_phdr[i].p_type   
         }
-        
+
+        std::cout << "Searching for string table\n";
+        for(int i = 0;i < elf32_ehdr.e_shnum;i++)
+        {
+            if(elf32_shdr[i].sh_type == SHT_STRTAB)
+            {
+                printf("Comparing %s %s\n", ".strtab", &buffer[elf32_shdr[elf32_ehdr.e_shstrndx].sh_offset + elf32_shdr[i].sh_name]);
+                if(strcmp(".strtab", &buffer[elf32_shdr[elf32_ehdr.e_shstrndx].sh_offset + elf32_shdr[i].sh_name]) == 0)
+                {
+                    printf("Found string table at index %d\n", i);
+                    strtab_index = i;
+                }
+            }
+        }
+        //Dumping all symbols from the symbol section
+        for(int i = 0;i < elf32_ehdr.e_shnum;i++)
+        {
+            if(elf32_shdr[i].sh_type == SHT_SYMTAB)
+            {
+                printf("Entry Size %d\n", elf32_shdr[i].sh_entsize);
+                printf("\n\n\nSymbol table found at index %d\n", i);
+                printf("symbtab contains %d entries\n", ((elf32_shdr[i].sh_size)/sizeof(Elf32_Sym)));
+                elf32_sym = (Elf32_Sym*)malloc(sizeof(Elf32_Sym)*((elf32_shdr[i].sh_size)/sizeof(Elf32_Sym)));
+                memcpy(elf32_sym, &buffer[elf32_shdr[i].sh_offset], sizeof(Elf32_Sym)*((elf32_shdr[i].sh_size)/sizeof(Elf32_Sym)));
+                for(int x = 0;x < ((elf32_shdr[i].sh_size)/sizeof(Elf32_Sym));x++)
+                {
+                    printf("Symbol: %08x %08s\n", elf32_sym[x].st_value, &buffer[elf32_shdr[strtab_index].sh_offset + elf32_sym[x].st_name]);
+                }
+            }
+        }
+
     }
     else
     {
@@ -231,9 +262,9 @@ elf_reader::~elf_reader()
     }
 }
 
-char* elf_reader::string_table(Elf32_Word index)
+char* elf_reader::string_table(Elf32_Word offset)
 {
-
+    return &file_data[elf32_shdr[strtab_index].sh_offset + offset];
 }
 
 //Check machine ID
@@ -293,4 +324,45 @@ char* elf_reader::get_ph_buffer(size_t i)
 uint32_t elf_reader::get_entry32() //Return Entry Address
 {
     return elf32_ehdr.e_entry;
+}
+
+std::vector<symbol32_t>* elf_reader::dump_symbols()
+{
+    std::vector<symbol32_t>* symbols = new std::vector<symbol32_t>();
+    if(elf32_shdr == nullptr)
+    {
+        return nullptr;
+    }
+    else
+    {
+        if(elf32_sym == nullptr)
+        {
+            return nullptr;
+        }
+        else
+        {
+            for(int i = 0;i < elf32_ehdr.e_shnum;i++)
+            {
+                if(elf32_shdr[i].sh_type == SHT_SYMTAB)
+                {
+                    for(int x = 0;x < ((elf32_shdr[i].sh_size)/sizeof(Elf32_Sym));x++)
+                    {
+                        symbols->push_back(
+                            {
+                                (symbol32_t)
+                                {
+                                    std::string(&file_data[elf32_shdr[strtab_index].sh_offset + elf32_sym[x].st_name]),
+                                    elf32_sym[x].st_value,
+                                    elf32_sym[x].st_size,
+                                    elf32_sym[x].st_info,
+                                    elf32_sym[x].st_other,
+                                    elf32_sym[x].st_shndx
+                                }
+                            });                    
+                    }
+                }
+            }
+            return symbols;
+        }
+    }
 }

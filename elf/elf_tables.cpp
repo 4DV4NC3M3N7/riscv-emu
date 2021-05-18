@@ -272,4 +272,4 @@ std::map<uint32_t, std::string> st_bind_table =
     {2, "STB_WEAK"},
     {13, "STB_LOPROC"},
     {15, "STB_HIPROC"}
-}
+};
