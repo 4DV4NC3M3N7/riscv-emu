@@ -1,6 +1,8 @@
 # riscv-emu
 RISCV RV32I emulator written in C++ and using SMFL for handling the window. The emulator support the RV32I ISA extention and the M-Mode Privilege mode with timer interrupt support. Memory Protection Register are not implemented.
 
+The performance of the emulator got really good. Now it can execute up-to 15MIPS on an i7 10750H Mobile CPU. At close to 200FPS.
+
 ### Goals
 
 One of the goals of this program is to have a TUI and a GUI. To which interface with it. But most importantly is to support the while privilege spec. Currently progress is being made into the TUI and GUI part of it.
