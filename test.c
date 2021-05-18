@@ -6,8 +6,9 @@
 #include <stdlib.h>
 #include "Font/consolas_font.h"
 
-extern void _set_time_int(int cycles);
+extern void _set_time_int(uint64_t cycles);
 extern uint64_t _get_time();
+extern uint64_t _get_timecmp();
 
 volatile char* terminal_buff_size = (char*)TERMINAL_SIZE;
 volatile char* terminal_i = (char*)TERMINAL_I_DATA;
@@ -45,11 +46,16 @@ void timer_interrupt_handler()
   char buffer [50];
   sprintf(buffer, "Currently on timer handler %d\n", cnt);
   cnt++;
-  //print(buffer);
+  print(buffer);
   //*((int*)TIMER_CMP_L_ADDR) = 0xffffffff;
   blink_cursor();
-  
-  _set_time_int(0x04000);
+
+  volatile uint64_t* time = ((uint64_t*)0x10000010);
+  volatile uint64_t* timecmp = ((uint64_t*)0x10000018);
+  sprintf(buffer, "timecmp 0x%016llx time 0x%016llx\n", *timecmp, *time);
+  print(buffer);
+  *timecmp = *time + 10000;
+
 }
 
 volatile int* frame_buffer = (int*)DISPLAY_L_ADDR; 
@@ -347,6 +353,31 @@ void draw_line(int x1, int y1, int x2, int y2)
     } 
 }
 
+void draw_line_color(int x1, int y1, int x2, int y2, pixel_t color)
+{
+    float deltax = (x2 - x1);
+    float deltay = (y2 - y1);
+
+    float deltaerr = (deltay / deltax);    // Assume deltax != 0 (line is not vertical),
+    if(deltaerr < 0) deltaerr = -deltaerr;
+          // note that this division needs to be done in a way that preserves the fractional part
+    float error = 0.0f; // No error at start
+    
+    int y = y1;
+    for(int x = x1; x <= x2;x++)
+    {
+        draw_point_color(x, y, color);
+        
+        error = error + deltaerr;
+        
+        if(error >= 0.5f)
+        {
+            y = y + sign(deltay);
+            error = error - 1.0f;
+        }
+    } 
+}
+
 pixel_t white = {0xff, 0xff, 0xff, 0xff};
 pixel_t black = {0x00, 0x00, 0x00, 0x00};
 
@@ -468,6 +499,7 @@ uint64_t last = 0;
 
 int main()
 {
+  
   char buffer [50];
 
   print("In main, before trap handler!\n");
@@ -496,6 +528,12 @@ int main()
     print("By: Benjamin Herrera Navarro\n");
     print("Date: 1/16/2021\n");
     print("8:04AM\n");
+
+    //while(true)
+    //{
+    //  sprintf(buffer, "Current Time: 0x%016x Timecmp: 0x%016x\r", _get_time(), _get_timecmp());
+    //  print(buffer);
+    //}
 
     for(int i = 0; i < 0xffff;i++);
     
