@@ -106,16 +106,30 @@ _start:
     #load current time
     la t0, time
     lw t1, 0(t0)
-    #offset loaded time by 0x500
-    addi t1, t1, -1 
+    lw t2, 4(t0)
+    #offset loaded time by 0x1fff
+    li t3, 0x1fff #load offset
 
+    add t4, t1, t3 #Offset value
+
+    #detect overflow
+    bltu t4, t2, .overflow
+    #Otherwise just set_timecmp
+    j .set_timecmp 
+    
+    .overflow:
+    #add overflow to higher bits
+    add t2, t2, t4
+
+    .set_timecmp:
     #set timecmp
     la t0, timecmp
     sw t1, 0(t0)
+    sw t2, 4(t0)
     
     #enable machine timer interrupt
-    #li t0, 0b10000000
-    #csrs mie, t0
+    li t0, 0b10000000
+    csrs mie, t0
 
     jal ra, main
 
@@ -174,4 +188,12 @@ _trap_handler:
     #---- end of C Code Handler ----
     pop_context    
     #return from trap handler
+    #Increment PC + 4
+    addi sp, sp, -1*REGBYTES
+    sw t0, 1*REGBYTES(sp)
+    csrr t0, mepc
+    addi t0, t0, 4
+    csrw mepc, t0
+    lw t0, 1*REGBYTES(sp)
+    addi sp, sp, 1*REGBYTES
     mret
