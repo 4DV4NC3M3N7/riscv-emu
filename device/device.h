@@ -11,7 +11,11 @@ public:
     ~device();
 
     virtual void write(uint8_t data, uint32_t address);
+    virtual void write32(uint32_t data, uint32_t address);
+    virtual void write16(uint16_t data, uint32_t address);
     virtual uint8_t read(uint32_t address);
+    virtual uint16_t read16(uint32_t address);
+    virtual uint32_t read32(uint32_t address);
     virtual void print();
     virtual void handle();
     /* data */
