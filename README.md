@@ -21,7 +21,7 @@ sudo apt-get install g++
 sudo apt-get install libsfml-dev
 ```
 ## RISC-V Toolchain
-RISCV Toolchain in order to compiler the tests
+RISCV Toolchain in order to compile the tests
 ```
 sudo apt-get install autoconf automake autotools-dev curl python3 libmpc-dev libmpfr-dev libgmp-dev gawk build-essential bison flex texinfo gperf libtool patchutils bc zlib1g-dev libexpat-dev
 git clone --recursive https://github.com/riscv/riscv-gnu-toolchain
@@ -57,4 +57,4 @@ second the number of instruction executed per second.
 The code that the emulator will be executing is on crt0.s, timer.s and test.c which includes the main function and exeption handler written in C.
 
 ### Known Issues.
-The timer interrupts are not working correctly and if enabled the emulator will glitch on a infinite loop. 
+The timer interrupts are not synchronized correctly yet. 
