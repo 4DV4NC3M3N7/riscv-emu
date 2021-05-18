@@ -154,4 +154,16 @@ imm[11:0] rs1 funct3 rd opcode I-type
 #define VECTORED_MODE                               0x01
 
 
+#define M_EXTENSION                                 0b0000001
+
+
+#define MUL                                         0b000
+#define MULH                                        0b001
+#define MULHSU                                      0b010
+#define MULHU                                       0b011
+#define DIV                                         0b100
+#define DIVU                                        0b101
+#define REM                                         0b110
+#define REMU                                        0b111
+
 #endif
