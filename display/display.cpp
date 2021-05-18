@@ -117,6 +117,14 @@ uint8_t DISPLAY::read(uint32_t addr)
 {
     return *(frame_buffer + (addr - min_address));
 }
+uint16_t DISPLAY::read16(uint32_t addr)
+{
+    return *(uint16_t*)(frame_buffer + ((addr>>1) - min_address));
+}
+uint32_t DISPLAY::read32(uint32_t addr)
+{
+    return *(uint32_t*)(frame_buffer + ((addr>>2) - min_address));
+}
 
 void DISPLAY::write(uint8_t data, uint32_t addr)
 {
@@ -127,5 +135,27 @@ void DISPLAY::write(uint8_t data, uint32_t addr)
     {
         //Substract the offset to start accessing memory from index 0
         *(frame_buffer + (addr - min_address)) = data;
+    }
+}
+void DISPLAY::write16(uint16_t data, uint32_t addr)
+{
+    #ifdef __DEBUG__
+        printf("Display: Write16: D -> 0x%08x, A -> 0x%02x\n", data, addr);
+    #endif
+    if(addr <= max_address)
+    {
+        //Substract the offset to start accessing memory from index 0
+        *(uint16_t*)(frame_buffer + (addr - min_address)) = data;
+    }
+}
+void DISPLAY::write32(uint32_t data, uint32_t addr)
+{
+    #ifdef __DEBUG__
+        printf("Display: Write32: D -> 0x%08x, A -> 0x%02x\n", data, addr);
+    #endif
+    if(addr <= max_address)
+    {
+        //Substract the offset to start accessing memory from index 0
+        *(uint32_t*)(frame_buffer + (addr - min_address)) = data;
     }
 }

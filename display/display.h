@@ -18,10 +18,14 @@ class DISPLAY: public device
         DISPLAY(uint32_t min_address, uint32_t max_address);
         DISPLAY(uint32_t min_address, uint32_t max_address, uint16_t height, uint16_t width);
         ~DISPLAY();
-        uint8_t read(uint32_t addr);
-        void write(uint8_t data, uint32_t addr);
+        void write(uint8_t data, uint32_t address);
+        void write32(uint32_t data, uint32_t address);
+        void write16(uint16_t data, uint32_t address);
+        uint8_t read(uint32_t address);
+        uint16_t read16(uint32_t address);
+        uint32_t read32(uint32_t address);
         uint16_t height, width;
-        sf::Uint8* frame_buffer;
+        sf::Uint8* frame_buffer = nullptr;
 };
 
 
