@@ -22,6 +22,8 @@
 #include "elf/elf_tables.h"
 #include "ext_mem/ext_mem.h"
 #include <argp.h>
+#include <math.h>
+#include "graphics/graphics.h"
 
 char getch(void)
 {
@@ -70,7 +72,7 @@ uint64_t nframes = 0;
 void display_handler(DISPLAY* display)
 {
     std::cout << "Creating Window\n";
-    sf::RenderWindow window(sf::VideoMode(display->width, display->height), "Riscv Emu!");
+    sf::RenderWindow window(sf::VideoMode(display->width+400, display->height+400), "Riscv Emu!");
     std::cout << "Finish Creating Window\n";
     sf::Texture* buffer_texture;
     buffer_texture = new sf::Texture();
@@ -79,6 +81,48 @@ void display_handler(DISPLAY* display)
     sf::Sprite sprite(*buffer_texture); // needed to draw the texture on screen
     std::cout << "Entering thread loop\n";
     //memset(display->frame_buffer, 0xff, (DISPLAY_HEIGHT*DISPLAY_WIDTH*4));
+    bool pressed = true;
+    sf::Vector2i position;
+    sf::Vector2f mouse_drag_position;
+    sf::Vector2f sprite_drag_position;
+    sf::Vector2f sprite_scale;
+    sf::VertexArray line(sf::Lines, 2);
+
+    graphics::container test_container(graphics::FULL_SCREEN, graphics::VERTICAL, &window);
+    test_container.position = sf::Vector2f(0,0);
+    test_container.pannels.push_back((graphics::pannel_t)
+    {
+        .stick_to = graphics::UP,
+        .arrangement = graphics::VERTICAL,
+        .size = 80
+    });
+    test_container.pannels.push_back((graphics::pannel_t)
+    {
+        .stick_to = graphics::UP,
+        .arrangement = graphics::VERTICAL,
+        .size = 80
+    });
+    test_container.pannels.push_back((graphics::pannel_t)
+    {
+        .stick_to = graphics::UP,
+        .arrangement = graphics::VERTICAL,
+        .size = 80
+    });
+    test_container.pannels.push_back((graphics::pannel_t)
+    {
+        .stick_to = graphics::UP,
+        .arrangement = graphics::VERTICAL,
+        .size = 80
+    });
+    test_container.pannels.push_back((graphics::pannel_t)
+    {
+        .stick_to = graphics::UP,
+        .arrangement = graphics::VERTICAL,
+        .size = 80
+    });
+
+    test_container.fit_pannels = true;
+
     while(!stop.load(std::memory_order_relaxed))
     {
         while (window.isOpen())
@@ -94,6 +138,48 @@ void display_handler(DISPLAY* display)
                     window.close();
                     stop.store(true, std::memory_order_relaxed);
                 }
+                if (sf::Mouse::isButtonPressed(sf::Mouse::Left) | sf::Mouse::isButtonPressed(sf::Mouse::Right))
+                {
+                    if(pressed)
+                    {
+                        
+                        if(sf::Vector2f((sf::Mouse::getPosition(window)-position).x, (sf::Mouse::getPosition(window)-position).y) != mouse_drag_position)
+                        {
+                            line[0].position = sf::Vector2f(position.x, position.y);
+                            line[0].color  = sf::Color::Red;
+                            mouse_drag_position = sf::Vector2f((sf::Mouse::getPosition(window)-position).x, (sf::Mouse::getPosition(window)-position).y)+(sf::Vector2f)position;
+                            line[1].position = mouse_drag_position;
+                            line[1].color = sf::Color::Red;
+
+                            window.draw(line);
+                            printf("Dragged x: %d y: %d mag: %f\n", sf::Mouse::getPosition(window)-position, sqrt(((sf::Mouse::getPosition(window).x - position.x)*(sf::Mouse::getPosition(window).x - position.x))+((sf::Mouse::getPosition(window).y - position.y)*(sf::Mouse::getPosition(window).y - position.y))));
+                            
+                            if(sf::Mouse::isButtonPressed(sf::Mouse::Right))
+                            {
+                                if(sprite.getGlobalBounds().contains(sf::Mouse::getPosition(window).x, sf::Mouse::getPosition(window).y))
+                                {
+                                    sprite.setPosition(sprite_drag_position + mouse_drag_position-(sf::Vector2f)position);
+                                }
+                            }
+                            if(sf::Mouse::isButtonPressed(sf::Mouse::Left))
+                            {
+                                sprite.setScale(sprite_scale+(mouse_drag_position-(sf::Vector2f)position)*0.01f);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        pressed = true;
+                        position = sf::Mouse::getPosition(window);
+                        sprite_drag_position = sprite.getPosition();
+                        sprite_scale = sprite.getScale();
+                    }
+                }
+                else
+                {
+                    pressed = false;
+                }
+
             }
             //printf("Pixel 1 %x, %x, %x, %x\n", *(buffer_texture), *(buffer_texture + 1), *(buffer_texture + 2), *(buffer_texture + 3));
             //window.clear();
@@ -104,6 +190,7 @@ void display_handler(DISPLAY* display)
             memcpy(second_frame_buff, display->frame_buffer, 4*display->height*display->height);
             buffer_texture->update(second_frame_buff);
             //buffer_texture->update(window);
+            //test_container.draw(&window);
             window.draw(sprite);
             window.display();
             //window.setFramerateLimit(1000);
@@ -277,10 +364,9 @@ int main(int argc, char *argv[])
         bus.add(&main_memory);
         bus.add(&terminal);
         bus.add(&display);
-        //bus.add(&timer);
+        bus.add(&timer);
         bus.add(&ext_mem);
         std::cout << "Loading ROM..." << std::endl;
-
         //Read program headers and initialize into memory
         for(int i = 0;i < reader.elf32_ehdr.e_phnum;i++)
         {
@@ -307,10 +393,41 @@ int main(int argc, char *argv[])
         core.attach_debug_symbols(dumped);
         stop.store(false, std::memory_order_relaxed);
 
-        //std::future<void> clock = std::async(&generate_steady_clock, &timer);
+        std::future<void> clock = std::async(&generate_steady_clock, &timer);
         std::future<void> update_display = std::async(&display_handler, &display); 
         std::future<void> terminal_handler = std::async(&terminal_input_handler, &terminal.input_buffer); 
+        
+        #ifdef __TIMER_RTC_TEST__
+        std::cout << "----------------------------------------------------\n";
+        std::cout << "-----------------Testing Timer RTC------------------\n";
+        std::cout << "----------------------------------------------------\n";
+        {
+            uint64_t inc = (timer.read32(TIMER_TIME_L_ADDR) | ((uint64_t)timer.read32(TIMER_TIME_H_ADDR) << 32));
+            printf("timecmp 0x%016llx time 0x%016llx %s\n", timer.timers.timecmp, timer.timers.time, (timer.interrupt.load(std::memory_order_relaxed)? "IRQ Enabled": "IRQ Disabled"));
+            printf("Setting up timecmp to: 0x%016llx time 0x%016llx %s\n", inc, timer.timers.time, (timer.interrupt.load(std::memory_order_relaxed)? "IRQ Enabled": "IRQ Disabled"));
+            timer.write32(inc&0xffffffff, TIMER_CMP_L_ADDR);
+            timer.write32(((inc >> 32) & 0xffffffff), TIMER_CMP_H_ADDR);
+        }
+        while(true)
+        {
+            //std::this_thread::sleep_for(50ms);
+                //timer.write32(0xffffffff, TIMER_CMP_L_ADDR);
+                //timer.write32(0xffffffff, TIMER_CMP_H_ADDR);
 
+            if(timer.interrupt.load(std::memory_order_relaxed))
+            {
+            printf("timecmp 0x%016llx time 0x%016llx %s\n", timer.timers.timecmp, timer.timers.time, (timer.interrupt.load(std::memory_order_relaxed)? "IRQ Enabled": "IRQ Disabled"));
+                uint64_t inc = (timer.read32(TIMER_TIME_L_ADDR) | ((uint64_t)timer.read32(TIMER_TIME_H_ADDR) << 32));
+                inc+=0x1fff;
+                //timer.write32(timer.read32(TIMER_L_ADDR)+0xffffffff, TIMER_CMP_L_ADDR);
+                //timer.write32(timer.read32(TIMER_L_ADDR)+0xfffff, TIMER_CMP_L_ADDR);
+                timer.write32(inc&0xffffffff, TIMER_CMP_L_ADDR);
+                timer.write32(((inc >> 32) & 0xffffffff), TIMER_CMP_H_ADDR);
+            }
+
+        }
+        #endif
+//
         #ifdef __INS_COUNT__
             signal(SIGALRM, &sigalrm_handler);  // set a signal handler
             signal(SIGINT, &sig_int_handler);  // set a signal handler for interrupt request
