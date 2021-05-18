@@ -228,6 +228,15 @@ void CORE::trace(uint32_t data_fetch)
         {&rd, &rs1, &imm12},
         {&rd, &rs1, &imm12},
         {&rd, &rs1, &imm12},
+        //M
+        {&rd, &rs1, &rs2},
+        {&rd, &rs1, &rs2},
+        {&rd, &rs1, &rs2},
+        {&rd, &rs1, &rs2},
+        {&rd, &rs1, &rs2},
+        {&rd, &rs1, &rs2},
+        {&rd, &rs1, &rs2},
+        {&rd, &rs1, &rs2},
         //Priv
         {&zero, &zero, &zero}
     };
@@ -280,6 +289,16 @@ void CORE::trace(uint32_t data_fetch)
         {"xxxxxxxxxxxxxxxxx101xxxxx1110011", "CSRRWI rd:%d, uimm:%d, imm:%d\n"},
         {"xxxxxxxxxxxxxxxxx110xxxxx1110011", "CSRRSI rd:%d, uimm:%d, imm:%d\n"},
         {"xxxxxxxxxxxxxxxxx111xxxxx1110011", "CSRRCI rd:%d, uimm:%d, imm:%d\n"},
+        //M Extension
+        {"0000001xxxxxxxxxx000xxxxx0110011", "MUL rd:%d, rs1:%d, rs2:%d\n"},
+        {"0000001xxxxxxxxxx001xxxxx0110011", "MULH rd:%d, rs1:%d, rs2:%d\n"},
+        {"0000001xxxxxxxxxx010xxxxx0110011", "MULHSU rd:%d, rs1:%d, rs2:%d\n"},
+        {"0000001xxxxxxxxxx011xxxxx0110011", "MULHU rd:%d, rs1:%d, rs2:%d\n"},
+        {"0000001xxxxxxxxxx100xxxxx0110011", "DIV rd:%d, rs1:%d, rs2:%d\n"},
+        {"0000001xxxxxxxxxx101xxxxx0110011", "DIVU rd:%d, rs1:%d, rs2:%d\n"},
+        {"0000001xxxxxxxxxx110xxxxx0110011", "REM rd:%d, rs1:%d, rs2:%d\n"},
+        {"0000001xxxxxxxxxx111xxxxx0110011", "REMU rd:%d, rs1:%d, rs2:%d\n"},
+
         //Priv
         {"00110000001000000000000001110011", "MRET\n"}
 
@@ -369,7 +388,7 @@ uint32_t CORE::execute_trap(uint32_t mcause, uint32_t mtval)
 uint32_t CORE::execute_interrupt(uint32_t mcause, uint32_t mtval)
 {
     //Setup trap handling registers
-    CSR[0x341] = PC-4; //Current PC
+    CSR[0x341] = PC; //Current PC
     CSR[0x342] = mcause;
     CSR[0x343] = mtval;
 
@@ -444,22 +463,16 @@ void CORE::execute()
     //MRW minstreth Upper 32 bits of minstret, RV32I only.
 
     //Setup interrupt pending bits
-
-    if(timer->interrupt_lock->try_lock())
+    //CPU core main timer
+    if(timer->interrupt.load(std::memory_order_acq_rel))
     {
-        //CPU core main timer
-        if(timer)
-        {
-            CSR[CSR_MIP] |=  (1 << 7);
-        }
-        else
-        {
-            CSR[CSR_MIP] &=  ~(1 << 7);
-        }
-        
-        timer->interrupt_lock->unlock();
+        CSR[CSR_MIP] |=  (1 << 7);
     }
-
+    else
+    {
+        CSR[CSR_MIP] &=  ~(1 << 7);
+    }
+        
     //Do CSR operations before instruction execution
     //Do interrupts first
     //Interrupts are disabled for lower privilege levels ALWAYS!
@@ -496,7 +509,7 @@ void CORE::execute()
 
     std::ios_base::fmtflags f( std::cout.flags() );
     //std::cout << "PC -> 0x" << std::hex << PC << std::endl;
-    uint32_t data_fetch = (bus->read(PC) | (bus->read(PC + 1) << 8) | (bus->read(PC + 2) << 16) | (bus->read(PC + 3) << 24)); 
+    uint32_t data_fetch = bus->read32(PC);//(bus->read(PC) | (bus->read(PC + 1) << 8) | (bus->read(PC + 2) << 16) | (bus->read(PC + 3) << 24)); 
     #ifdef __TRACING__
         trace(data_fetch);
     #endif
@@ -609,75 +622,153 @@ void CORE::execute()
             PC += 0x4;
         break;
         case R_ENCODING:
-            switch (FUNC3_DECODE(data_fetch))
+            if(FUNC7_DECODE(data_fetch) == M_EXTENSION)
             {
-                case ADD_SUB_FUNC3:
-                    if(FUNC7_DECODE(data_fetch) == SUB_FUNC7)
-                    {
-                        //std::cout << "SUB Executed" << std::endl;
-                        REGS[RD_DECODE(data_fetch)] = REGS[RS1_DECODE(data_fetch)] - REGS[RS2_DECODE(data_fetch)];
-                    }
-                    else
-                    {   
-                        //std::cout << "ADD Executed" << std::endl;
-                        //printf("rs1: 0x%08d, rs2: 0x%08x");
-                        REGS[RD_DECODE(data_fetch)] = REGS[RS1_DECODE(data_fetch)] + REGS[RS2_DECODE(data_fetch)];
-                    }
+                switch (FUNC3_DECODE(data_fetch))
+                {
+                    case MUL:
+                            REGS[RD_DECODE(data_fetch)] = (int32_t)REGS[RS1_DECODE(data_fetch)] * (int32_t)REGS[RS2_DECODE(data_fetch)];
                     break;
-                case SLL_FUNC3:
-                    //std::cout << "SLL Executed" << std::endl;
-                    REGS[RD_DECODE(data_fetch)] = REGS[RS1_DECODE(data_fetch)] << REGS[RS2_DECODE(data_fetch)];
+                    case MULH:
+                            REGS[RD_DECODE(data_fetch)] = ((int64_t)REGS[RS1_DECODE(data_fetch)] * (int64_t)REGS[RS2_DECODE(data_fetch)]) >> 32;
                     break;
-                case SLT_FUNC3:
-                    //std::cout << "SLT Executed" << std::endl;
-                    REGS[RD_DECODE(data_fetch)] = ((int32_t)REGS[RS1_DECODE(data_fetch)] < (int32_t)REGS[RS2_DECODE(data_fetch)])? 1 : 0;
+                    case MULHSU:
+                            REGS[RD_DECODE(data_fetch)] = ((int64_t)REGS[RS1_DECODE(data_fetch)] * (uint64_t)REGS[RS2_DECODE(data_fetch)]) >> 32;
                     break;
-                case SLTU_FUNC3:
-                    //std::cout << "SLT Executed" << std::endl;
-                    if(RS1_DECODE(data_fetch) == 0x00)
-                    {
-                        REGS[RD_DECODE(data_fetch)]= 0;
-                    }
-                    else
-                    {
-                        REGS[RD_DECODE(data_fetch)] = ((uint32_t)REGS[RS1_DECODE(data_fetch)] < (uint32_t)REGS[RS2_DECODE(data_fetch)])? 1 : 0;                    
-                    }
-
+                    case MULHU:
+                            REGS[RD_DECODE(data_fetch)] = ((uint64_t)REGS[RS1_DECODE(data_fetch)]) - ((uint64_t)REGS[RS2_DECODE(data_fetch)]);
                     break;
-                case XOR_FUNC3:
-                    //std::cout << "XOR Executed" << std::endl;
-                    REGS[RD_DECODE(data_fetch)] = REGS[RS1_DECODE(data_fetch)] ^ REGS[RS2_DECODE(data_fetch)];
+                    case DIV:
+                            if(REGS[RS2_DECODE(data_fetch)] == 0)
+                            {
+                                REGS[RD_DECODE(data_fetch)] = -1;
+                            }
+                            else
+                            {
+                                if((REGS[RS2_DECODE(data_fetch)] == -1) && (REGS[RS1_DECODE(data_fetch)] == 0xffffffff))
+                                {
+                                    REGS[RD_DECODE(data_fetch)] = -4294967297;
+                                }
+                                else
+                                {
+                                    REGS[RD_DECODE(data_fetch)] = (int32_t)REGS[RS1_DECODE(data_fetch)] / (int32_t)REGS[RS2_DECODE(data_fetch)];
+                                }
+                            }
                     break;
-                case SRL_SRA_FUNC3:
-                    if(FUNC7_DECODE(data_fetch) == SRA_FUNC7)
-                    {
-                        //std::cout << "SRA Executed" << std::endl;
-                        if ((int32_t)REGS[RS1_DECODE(data_fetch)] < 0 && (REGS[RS1_DECODE(data_fetch)] & 0x1f) > 0)
+                    case DIVU:
+                            if(REGS[RS2_DECODE(data_fetch)] == 0)
+                            {
+                                REGS[RD_DECODE(data_fetch)] = 0xffffffff;
+                            }
+                            else
+                            {
+                                REGS[RD_DECODE(data_fetch)] = (uint32_t)REGS[RS1_DECODE(data_fetch)] / (uint32_t)REGS[RS2_DECODE(data_fetch)];
+                            }
+                    break;
+                    case REM:
+                            if(REGS[RS2_DECODE(data_fetch)] == 0)
+                            {
+                                REGS[RD_DECODE(data_fetch)] = REGS[RS1_DECODE(data_fetch)];
+                            }
+                            else
+                            {
+                                if((REGS[RS2_DECODE(data_fetch)] == -1) && (REGS[RS1_DECODE(data_fetch)] == 0xffffffff))
+                                {
+                                    REGS[RD_DECODE(data_fetch)] = 0;
+                                }
+                                else
+                                {
+                                    REGS[RD_DECODE(data_fetch)] = (int32_t)REGS[RS1_DECODE(data_fetch)] % (int32_t)REGS[RS2_DECODE(data_fetch)];
+                                }
+                            }
+                    break;
+                    case REMU:
+                            if(REGS[RS2_DECODE(data_fetch)] == 0)
+                            {
+                                REGS[RD_DECODE(data_fetch)] = REGS[RS1_DECODE(data_fetch)];
+                            }
+                            else
+                            {
+                                REGS[RD_DECODE(data_fetch)] = (uint32_t)REGS[RS1_DECODE(data_fetch)] % (uint32_t)REGS[RS2_DECODE(data_fetch)];
+                            }
+                    
+                    break;
+                default:
+                    break;
+                }
+            }
+            else
+            {
+                switch (FUNC3_DECODE(data_fetch))
+                {
+                    case ADD_SUB_FUNC3:
+                        if(FUNC7_DECODE(data_fetch) == SUB_FUNC7)
                         {
-                            REGS[RD_DECODE(data_fetch)] = (int32_t)REGS[RS1_DECODE(data_fetch)] >> REGS[RS2_DECODE(data_fetch)] | ~(~0U >> REGS[RS1_DECODE(data_fetch)]);
+                            //std::cout << "SUB Executed" << std::endl;
+                            REGS[RD_DECODE(data_fetch)] = REGS[RS1_DECODE(data_fetch)] - REGS[RS2_DECODE(data_fetch)];
+                        }
+                        else
+                        {   
+                            //std::cout << "ADD Executed" << std::endl;
+                            //printf("rs1: 0x%08d, rs2: 0x%08x");
+                            REGS[RD_DECODE(data_fetch)] = REGS[RS1_DECODE(data_fetch)] + REGS[RS2_DECODE(data_fetch)];
+                        }
+                        break;
+                    case SLL_FUNC3:
+                        //std::cout << "SLL Executed" << std::endl;
+                        REGS[RD_DECODE(data_fetch)] = REGS[RS1_DECODE(data_fetch)] << REGS[RS2_DECODE(data_fetch)];
+                        break;
+                    case SLT_FUNC3:
+                        //std::cout << "SLT Executed" << std::endl;
+                        REGS[RD_DECODE(data_fetch)] = ((int32_t)REGS[RS1_DECODE(data_fetch)] < (int32_t)REGS[RS2_DECODE(data_fetch)])? 1 : 0;
+                        break;
+                    case SLTU_FUNC3:
+                        //std::cout << "SLT Executed" << std::endl;
+                        if(RS1_DECODE(data_fetch) == 0x00)
+                        {
+                            REGS[RD_DECODE(data_fetch)]= 0;
                         }
                         else
                         {
-                            REGS[RD_DECODE(data_fetch)] = (int32_t)REGS[RS1_DECODE(data_fetch)] >> REGS[RS2_DECODE(data_fetch)];
+                            REGS[RD_DECODE(data_fetch)] = ((uint32_t)REGS[RS1_DECODE(data_fetch)] < (uint32_t)REGS[RS2_DECODE(data_fetch)])? 1 : 0;                    
                         }
-                    }
-                    else
-                    {
-                        //std::cout << "SRL Executed" << std::endl;
-                        REGS[RD_DECODE(data_fetch)] = (uint32_t)REGS[RS1_DECODE(data_fetch)] >> (REGS[RS2_DECODE(data_fetch)] & 0x1f);
-                    }
+
+                        break;
+                    case XOR_FUNC3:
+                        //std::cout << "XOR Executed" << std::endl;
+                        REGS[RD_DECODE(data_fetch)] = REGS[RS1_DECODE(data_fetch)] ^ REGS[RS2_DECODE(data_fetch)];
+                        break;
+                    case SRL_SRA_FUNC3:
+                        if(FUNC7_DECODE(data_fetch) == SRA_FUNC7)
+                        {
+                            //std::cout << "SRA Executed" << std::endl;
+                            if ((int32_t)REGS[RS1_DECODE(data_fetch)] < 0 && (REGS[RS1_DECODE(data_fetch)] & 0x1f) > 0)
+                            {
+                                REGS[RD_DECODE(data_fetch)] = (int32_t)REGS[RS1_DECODE(data_fetch)] >> REGS[RS2_DECODE(data_fetch)] | ~(~0U >> REGS[RS1_DECODE(data_fetch)]);
+                            }
+                            else
+                            {
+                                REGS[RD_DECODE(data_fetch)] = (int32_t)REGS[RS1_DECODE(data_fetch)] >> REGS[RS2_DECODE(data_fetch)];
+                            }
+                        }
+                        else
+                        {
+                            //std::cout << "SRL Executed" << std::endl;
+                            REGS[RD_DECODE(data_fetch)] = (uint32_t)REGS[RS1_DECODE(data_fetch)] >> (REGS[RS2_DECODE(data_fetch)] & 0x1f);
+                        }
+                        break;
+                    case OR_FUNC3:
+                        //std::cout << "OR Executed" << std::endl;
+                        REGS[RD_DECODE(data_fetch)] = REGS[RS1_DECODE(data_fetch)] | REGS[RS2_DECODE(data_fetch)];
+                        break;
+                    case AND_FUNC3:
+                        //std::cout << "AND Executed" << std::endl;
+                        //print_regs();
+                        REGS[RD_DECODE(data_fetch)] = REGS[RS1_DECODE(data_fetch)] & REGS[RS2_DECODE(data_fetch)];
+                        break;
+                default:
                     break;
-                case OR_FUNC3:
-                    //std::cout << "OR Executed" << std::endl;
-                    REGS[RD_DECODE(data_fetch)] = REGS[RS1_DECODE(data_fetch)] | REGS[RS2_DECODE(data_fetch)];
-                    break;
-                case AND_FUNC3:
-                    //std::cout << "AND Executed" << std::endl;
-                    //print_regs();
-                    REGS[RD_DECODE(data_fetch)] = REGS[RS1_DECODE(data_fetch)] & REGS[RS2_DECODE(data_fetch)];
-                    break;
-            default:
-                break;
+                }
             }
             PC += 0x4;
             break;
@@ -687,12 +778,12 @@ void CORE::execute()
                 REGS[RD_DECODE(data_fetch)] = PC + 4;
                 //symbol32_t* ref;
                 PC += (int32_t)SIGNEX(UJ_IMM_DECODE(data_fetch), 20);
-                std::vector<symbol32_t>::iterator entry = std::find_if(symbol_table->begin(), symbol_table->end(), [&](const symbol32_t& symbol32)->bool{
-                    return (symbol32.value == PC)? true : false; });
-                if(entry != symbol_table->end())
-                {
-                    printf("Function called %s\n", entry->name.c_str());
-                }
+                //std::vector<symbol32_t>::iterator entry = std::find_if(symbol_table->begin(), symbol_table->end(), [&](const symbol32_t& symbol32)->bool{
+                //    return (symbol32.value == PC)? true : false; });
+                //if(entry != symbol_table->end())
+                //{
+                //    printf("Function called %s\n", entry->name.c_str());
+                //}
             }
             break;
         case JALR_OP:
@@ -700,12 +791,12 @@ void CORE::execute()
                 //std::cout << "JALR Executed" << std::endl;
                 REGS[RD_DECODE(data_fetch)] = PC + 4;
                 PC = REGS[RS1_DECODE(data_fetch)] + (int32_t)(SIGNEX(IMM12_DECODE(data_fetch), 11));
-                std::vector<symbol32_t>::iterator entry = std::find_if(symbol_table->begin(), symbol_table->end(), [&](const symbol32_t& symbol32)->bool{
-                    return (symbol32.value == PC)? true : false; });
-                if(entry != symbol_table->end())
-                {
-                    printf("Function called %s\n", entry->name.c_str());
-                }
+                //std::vector<symbol32_t>::iterator entry = std::find_if(symbol_table->begin(), symbol_table->end(), [&](const symbol32_t& symbol32)->bool{
+                //    return (symbol32.value == PC)? true : false; });
+                //if(entry != symbol_table->end())
+                //{
+                //    printf("Function called %s\n", entry->name.c_str());
+                //}
             }
             break;
         case BRANCH:
@@ -806,12 +897,22 @@ void CORE::execute()
                 case LW_FUNC3:
                 {
                     //std::cout << "LW Executed" << std::endl;
-                    uint8_t bytes [4];
-                    bytes [0] = bus->read(REGS[RS1_DECODE(data_fetch)] + (int32_t)SIGNEX(IMM12_DECODE(data_fetch), 11) + 0x00);
-                    bytes [1] = bus->read(REGS[RS1_DECODE(data_fetch)] + (int32_t)SIGNEX(IMM12_DECODE(data_fetch), 11) + 0x01);
-                    bytes [2] = bus->read(REGS[RS1_DECODE(data_fetch)] + (int32_t)SIGNEX(IMM12_DECODE(data_fetch), 11) + 0x02);
-                    bytes [3] = bus->read(REGS[RS1_DECODE(data_fetch)] + (int32_t)SIGNEX(IMM12_DECODE(data_fetch), 11) + 0x03);
-                    REGS[RD_DECODE(data_fetch)] = (bytes [0] | (bytes [1] << 8) | (bytes [2] << 16) | (bytes [3] << 24));
+                    //uint8_t bytes [4];
+                    //bytes [0] = bus->read(REGS[RS1_DECODE(data_fetch)] + (int32_t)SIGNEX(IMM12_DECODE(data_fetch), 11) + 0x00);
+                    //bytes [1] = bus->read(REGS[RS1_DECODE(data_fetch)] + (int32_t)SIGNEX(IMM12_DECODE(data_fetch), 11) + 0x01);
+                    //bytes [2] = bus->read(REGS[RS1_DECODE(data_fetch)] + (int32_t)SIGNEX(IMM12_DECODE(data_fetch), 11) + 0x02);
+                    //bytes [3] = bus->read(REGS[RS1_DECODE(data_fetch)] + (int32_t)SIGNEX(IMM12_DECODE(data_fetch), 11) + 0x03);
+                    //REGS[RD_DECODE(data_fetch)] = (bytes [0] | (bytes [1] << 8) | (bytes [2] << 16) | (bytes [3] << 24));
+                    REGS[RD_DECODE(data_fetch)] = bus->read32(REGS[RS1_DECODE(data_fetch)] + (int32_t)SIGNEX(IMM12_DECODE(data_fetch), 11) + 0x00);
+                    
+                    //if((uint32_t)(bytes [0] | (bytes [1] << 8) | (bytes [2] << 16) | (bytes [3] << 24)) != 
+                    //bus->read32(REGS[RS1_DECODE(data_fetch)] + (int32_t)SIGNEX(IMM12_DECODE(data_fetch), 11)))
+                    //{
+                    //    printf("Core: Read32 failed: Expected 0x%08x, Received 0x%08x\n",
+                    //    (uint32_t)(bytes [0] | (bytes [1] << 8) | (bytes [2] << 16) | (bytes [3] << 24)), bus->read32(REGS[RS1_DECODE(data_fetch)] + (int32_t)SIGNEX(IMM12_DECODE(data_fetch), 11))
+                    //    );
+                    //    exit(1);
+                    //}
                 }
                 break;
                 case LBU_FUNC3:
@@ -848,10 +949,11 @@ void CORE::execute()
                 break;
                 case SW_FUNC3:
                     //std::cout << "SW Executed" << std::endl;
-                    bus->write((REGS[RS2_DECODE(data_fetch)] & 0x000000ff) >> 0,  (REGS[RS1_DECODE(data_fetch)] + SIGNEX(S_IMM12_DECODE(data_fetch), 11)) + 0x0);
-                    bus->write((REGS[RS2_DECODE(data_fetch)] & 0x0000ff00) >> 8,  (REGS[RS1_DECODE(data_fetch)] + SIGNEX(S_IMM12_DECODE(data_fetch), 11)) + 0x1);
-                    bus->write((REGS[RS2_DECODE(data_fetch)] & 0x00ff0000) >> 16, (REGS[RS1_DECODE(data_fetch)] + SIGNEX(S_IMM12_DECODE(data_fetch), 11)) + 0x2);
-                    bus->write((REGS[RS2_DECODE(data_fetch)] & 0xff000000) >> 24, (REGS[RS1_DECODE(data_fetch)] + SIGNEX(S_IMM12_DECODE(data_fetch), 11)) + 0x3);
+                    //bus->write((REGS[RS2_DECODE(data_fetch)] & 0x000000ff) >> 0,  (REGS[RS1_DECODE(data_fetch)] + SIGNEX(S_IMM12_DECODE(data_fetch), 11)) + 0x0);
+                    //bus->write((REGS[RS2_DECODE(data_fetch)] & 0x0000ff00) >> 8,  (REGS[RS1_DECODE(data_fetch)] + SIGNEX(S_IMM12_DECODE(data_fetch), 11)) + 0x1);
+                    //bus->write((REGS[RS2_DECODE(data_fetch)] & 0x00ff0000) >> 16, (REGS[RS1_DECODE(data_fetch)] + SIGNEX(S_IMM12_DECODE(data_fetch), 11)) + 0x2);
+                    //bus->write((REGS[RS2_DECODE(data_fetch)] & 0xff000000) >> 24, (REGS[RS1_DECODE(data_fetch)] + SIGNEX(S_IMM12_DECODE(data_fetch), 11)) + 0x3);
+                    bus->write32(REGS[RS2_DECODE(data_fetch)], (REGS[RS1_DECODE(data_fetch)] + SIGNEX(S_IMM12_DECODE(data_fetch), 11)));
                 break;
             default:
                 break;
@@ -889,7 +991,7 @@ void CORE::execute()
                             std::cout << "Error: Illegal Instruction: Supervisor node not supported" << std::endl;
                         break;
                         case MRET:
-                            PC = CSR[0x341] + 4;
+                            PC = CSR[0x341];
                             //Set previous privilege level
                             mode = (CSR[CSR_MSTATUS] >> 11) & 0b11;
                             //Set xIE to xPIE
@@ -1079,6 +1181,7 @@ void CORE::execute()
 
                     break;
             }
+        break;
         break;
         default:
             printf("Illegal Instruction 0x%08x at: 0x%08x\n", data_fetch, PC);
