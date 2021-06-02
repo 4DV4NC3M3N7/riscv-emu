@@ -88,6 +88,8 @@ class CORE
 
     void attach_debug_symbols(std::vector<symbol32_t>* symbol_table);
     void debug_options(debug_options_t debug_options);
+    
+    void pmp_check(debug_options_t debug_options);
 
     uint8_t get_ins_opcode(uint8_t data);
     bool running;

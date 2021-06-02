@@ -24,6 +24,9 @@
 #include <argp.h>
 #include <math.h>
 #include "graphics/graphics.h"
+#include <gtk-3.0/gtk/gtk.h>
+#include <gtk-3.0/gtk/gtkbuilder.h>
+
 
 char getch(void)
 {
@@ -312,11 +315,119 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     return 0;
 }
 
+static void
+print_hello (GtkWidget *widget,
+             gpointer   data)
+{
+  g_print ("Hello World\n");
+}
+
+static void
+activate (GtkApplication *app,
+          gpointer        user_data)
+{
+
+
+
+  GtkWidget *window;
+  GtkWidget *button;
+  GtkWidget *button_box;
+  GtkBuilder      *builder; 
+
+    
+    builder = gtk_builder_new();
+    gtk_builder_add_from_file (builder, "layout.glade", NULL);
+
+    window = GTK_WIDGET(gtk_builder_get_object(builder, "window_main"));
+    gtk_builder_connect_signals(builder, NULL);
+    gtk_application_add_window(GTK_APPLICATION(app), GTK_WINDOW(window));
+
+
+    GtkWidget* notebook = GTK_WIDGET(gtk_builder_get_object(builder, "main_context"));
+    
+    gtk_notebook_append_page (GTK_NOTEBOOK(notebook),
+                          NULL,
+                          NULL);
+    //g_object_unref(builder);
+
+    //gtk_widget_show(window);                
+    //gtk_main();
+
+  //window = gtk_application_window_new (app);
+  //gtk_window_set_title (GTK_WINDOW (window), "Window");
+  //gtk_window_fullscreen(GTK_WINDOW (window));
+
+  //Set window to full screen
+
+  //button_box = gtk_button_box_new (GTK_ORIENTATION_HORIZONTAL);
+  //gtk_container_add (GTK_CONTAINER (window), button_box);
+
+  //button = gtk_button_new_with_label ("Hello World");
+  ///g_signal_connect (button, "clicked", G_CALLBACK (print_hello), NULL);
+  //g_signal_connect_swapped (button, "clicked", G_CALLBACK (gtk_widget_destroy), window);
+  //gtk_container_add (GTK_CONTAINER (button_box), button);
+
+  gtk_widget_show_all (window);
+}
+
 static struct argp argp = { options, parse_opt, args_doc, doc, 0, 0, 0 };
 
+void setup_cmd_options(GtkApplication *app)
+{
+    g_application_add_main_option (G_APPLICATION (app),
+                           "tracing",
+                           't',
+                           G_OPTION_FLAG_NO_ARG,
+                           G_OPTION_ARG_NONE,
+                           "Enable CPU tracing",
+                           nullptr);
+    g_application_add_main_option (G_APPLICATION (app),
+                           "no-graphics",
+                           'g',
+                           G_OPTION_FLAG_NO_ARG,
+                           G_OPTION_ARG_NONE,
+                           "Disable graphics",
+                           nullptr);
+    g_application_add_main_option (G_APPLICATION (app),
+                           "stepping",
+                           's',
+                           G_OPTION_FLAG_NO_ARG,
+                           G_OPTION_ARG_NONE,
+                           "Instruction stepping",
+                           nullptr);
+    g_application_add_main_option (G_APPLICATION (app),
+                           "log",
+                           'l',
+                           G_OPTION_FLAG_FILENAME,
+                           G_OPTION_ARG_FILENAME,
+                           "Log file",
+                           "[filename]");
+    g_application_add_main_option (G_APPLICATION (app),
+                           "log-options",
+                           'o',
+                           G_OPTION_FLAG_OPTIONAL_ARG,
+                           G_OPTION_ARG_STRING_ARRAY,
+                           "Log options",
+                           "int,exec,call,csr\n");
+}
 
 int main(int argc, char *argv[])
 {
+    GtkApplication *app;
+    int status;
+
+    //gtk_init(&argc, &argv);
+    app = gtk_application_new ("git.bitglitcher.riscv_emu", G_APPLICATION_FLAGS_NONE);
+    g_signal_connect (app, "activate", G_CALLBACK (activate), NULL);
+    setup_cmd_options(app);
+    status = g_application_run (G_APPLICATION (app), argc, argv);
+    g_object_unref (app);
+    return 0;
+
+
+    
+//
+    //    return status;
     struct arguments arguments;
     arguments.graphical = false;
     arguments.call_trace = false;
@@ -366,6 +477,8 @@ int main(int argc, char *argv[])
         bus.add(&display);
         bus.add(&timer);
         bus.add(&ext_mem);
+
+
         std::cout << "Loading ROM..." << std::endl;
         //Read program headers and initialize into memory
         for(int i = 0;i < reader.elf32_ehdr.e_phnum;i++)

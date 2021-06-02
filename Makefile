@@ -1,4 +1,4 @@
-CFLAGS=-lsfml-graphics -lsfml-window -lsfml-system -lpthread -g
+CFLAGS=-lsfml-graphics -lsfml-window -lsfml-system -lpthread -g `pkg-config --cflags gtk+-3.0` `pkg-config --libs gtk+-3.0`
 
 all: terminal.o core.o memory.o device.o bus.o display.o ext_mem.o timer.o elf.o elf_tables.o graphics.o riscv_emu
 

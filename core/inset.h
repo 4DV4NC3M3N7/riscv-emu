@@ -150,6 +150,40 @@ imm[11:0] rs1 funct3 rd opcode I-type
 #define CSR_MCAUSE                                  0x342 
 #define CSR_MTVAL                                   0x343 
 
+//Physical Memory Protection CSRs
+#define pmpcfg0 0x3A0   //Physical memory protection configuration.
+#define pmpcfg1 0x3A1   //Physical memory protection configuration, RV32 only.
+#define pmpcfg2 0x3A2   //Physical memory protection configuration.
+#define pmpcfg3 0x3A3   //Physical memory protection configuration, RV32 only.
+#define pmpaddr0 0x3B0  //Physical memory protection address register.
+#define pmpaddr1 0x3B1  //Physical memory protection address register.
+#define pmpaddr2 0x3B2  //Physical memory protection address register.
+#define pmpaddr3 0x3B3  //Physical memory protection address register.
+#define pmpaddr4 0x3B4  //Physical memory protection address register.
+#define pmpaddr5 0x3B5  //Physical memory protection address register.
+#define pmpaddr6 0x3B6  //Physical memory protection address register.
+#define pmpaddr7 0x3B7  //Physical memory protection address register.
+#define pmpaddr8 0x3B8  //Physical memory protection address register.
+#define pmpaddr9 0x3B9  //Physical memory protection address register.
+#define pmpaddr10 0x3BA //Physical memory protection address register.
+#define pmpaddr11 0x3BB //Physical memory protection address register.
+#define pmpaddr12 0x3BC //Physical memory protection address register.
+#define pmpaddr13 0x3BD //Physical memory protection address register.
+#define pmpaddr14 0x3BE //Physical memory protection address register.
+#define pmpaddr15 0x3BF //Physical memory protection address register
+
+//Macros to Access the configuration registers
+#define GET_PMPCFG_R(x) (x & 0b1)
+#define GET_PMPCFG_W(x) ((x >> 1 &) 0x1)
+#define GET_PMPCFG_X(x) ((x >> 2) & 0x1)
+#define GET_PMPCFG_L(x) ((x >> 3) & 0b11)
+#define GET_PMPCFG_A(x) ((x >> 7) & 0x1)
+
+#define PMPCFG_A_OFF 0   //OFF Null region (disabled)
+#define PMPCFG_A_TOR 1   //TOR Top of range
+#define PMPCFG_A_NA4 2   //NA4 Naturally aligned four-byte region
+#define PMPCFG_A_NAPOT 3 //NAPOT Naturally aligned power-of-two region, ≥8 bytes
+
 #define DIRECT_MODE                                 0x00
 #define VECTORED_MODE                               0x01
 

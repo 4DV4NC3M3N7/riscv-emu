@@ -1,0 +1,523 @@
+#riscv64-unknown-elf-objdump -ds test_linked.o
+./riscv_emu test_linked.o
+Starting Main
+
+
+
+
+
+
+
+
+
+
+
+
+[0melf32_ehdr.e_ident_raw: [31mANSI_COLOR_RED
+[0melf32_ehdr.e_type: [32mANSI_COLOR_GREEN
+[0melf32_ehdr.e_machine: [33mANSI_COLOR_YELLOW
+[0melf32_ehdr.e_version:[34mANSI_COLOR_BLUE
+[0melf32_ehdr.e_entry: [35mANSI_COLOR_MAGENTA
+[0melf32_ehdr.e_phoff: [36mANSI_COLOR_CYAN
+[0melf32_ehdr.e_shoff: [31mANSI_COLOR_RED
+[0melf32_ehdr.e_flags: [32mANSI_COLOR_GREEN
+[0melf32_ehdr.e_ehsize: [33mANSI_COLOR_YELLOW
+[0melf32_ehdr.e_phentsize: [34mANSI_COLOR_BLUE
+[0melf32_ehdr.e_phnum: [35mANSI_COLOR_MAGENTA
+[0melf32_ehdr.e_shentsize: [36mANSI_COLOR_CYAN
+[0melf32_ehdr.e_shnum: [31mANSI_COLOR_RED
+[0melf32_ehdr.e_shstrndx: [32mANSI_COLOR_GREEN
+[0m
+
+
+
+[31m0x7f 0x45 0x4c 0x46 0x01 0x01 0x01 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00 [0m[32m0x02 
+0x00 [0m[33m0xf3 0x00 [0m[34m0x01 0x00 0x00 0x00 [0m[35m0x00 0x00 0x00 0x00 [0m[36m0x34 0x00 0x00 0x00 [0m[31m0xe0 0x4c 
+0x04 0x00 [0m[32m0x00 0x00 0x00 0x00 [0m[33m0x34 0x00 [0m[34m0x20 0x00 [0m[35m0x01 0x00 [0m[36m0x28 0x00 [0m[31m0x17 0x00 [0m[32m0x16 
+0x00 [0m[33m0x01 [0m
+
+
+
+Starting Address of execution 0x00000000
+
+
+
+e_type: 2
+section table address: 281824
+section table entry size: 40
+section table entries: 23
+string table index: 22
+name 
+name .init
+name .text
+name .rodata
+name .eh_frame
+name .data
+name .got
+name .sdata
+name .sbss
+name .bss
+name .comment
+name .riscv.attributes
+name .debug_aranges
+name .debug_info
+name .debug_abbrev
+name .debug_line
+name .debug_frame
+name .debug_str
+name .debug_loc
+name .debug_ranges
+name .symtab
+name .strtab
+name .shstrtab
+RISCV machine
+Type	Offset		VirtAddr		PhysAddr		FileSiz		MemSiz		Flg Align
+PT_LOAD	0x00001000	0x00000000		0x00000000		0x00016388	0x00017034	NONE 0x00000007
+Searching for string table
+Comparing .strtab .strtab
+Found string table at index 21
+Comparing .strtab .shstrtab
+Entry Size 16
+
+
+
+Symbol table found at index 20
+symbtab contains 379 entries
+Symbol: 00000000         
+Symbol: 00000000         
+Symbol: 000002d8         
+Symbol: 00014568         
+Symbol: 000157b0         
+Symbol: 00015830         
+Symbol: 00016314         
+Symbol: 00016360         
+Symbol: 00016388         
+Symbol: 000163a0         
+Symbol: 00000000         
+Symbol: 00000000         
+Symbol: 00000000         
+Symbol: 00000000         
+Symbol: 00000000         
+Symbol: 00000000         
+Symbol: 00000000         
+Symbol: 00000000         
+Symbol: 00000000         
+Symbol: 00000000         
+Symbol: 00000000 /tmp/ccmBT0U8.o
+Symbol: 00000004 REGBYTES
+Symbol: 10000018  timecmp
+Symbol: 1000001c timecmp_h
+Symbol: 10000010     time
+Symbol: 10000014   time_h
+Symbol: 00000074 _vector_table
+Symbol: 00000050 .overflow
+Symbol: 00000054 .set_timecmp
+Symbol: 000000a0 _m_mode_timer_handler
+Symbol: 00000000 /tmp/ccO4DUGC.o
+Symbol: 10000010     time
+Symbol: 10000018  timecmp
+Symbol: 00000000   test.c
+Symbol: 00017008  state.0
+Symbol: 00000000 libgcc2.c
+Symbol: 00000000 addsf3.c
+Symbol: 00000000 divsf3.c
+Symbol: 00000000  gesf2.c
+Symbol: 00000000  lesf2.c
+Symbol: 00000000 subsf3.c
+Symbol: 00000000 fixsfsi.c
+Symbol: 00000000 floatsisf.c
+Symbol: 00000000 libgcc2.c
+Symbol: 00000000 libgcc2.c
+Symbol: 00000000   rand.c
+Symbol: 00000000 sprintf.c
+Symbol: 00000000 vfprintf.c
+Symbol: 00014e58 blanks.1
+Symbol: 00014e68 zeroes.0
+Symbol: 00000000 mallocr.c
+Symbol: 00000000 impure.c
+Symbol: 00015978 impure_data
+Symbol: 00000000  ldtoa.c
+Symbol: 00005d6c   eshdn1
+Symbol: 00005dd4   eshup1
+Symbol: 00005e44     m16m
+Symbol: 00005edc emovo.constprop.0
+Symbol: 00005f98  enormlz
+Symbol: 00006114 eshift.part.0
+Symbol: 00006334    emovi
+Symbol: 000063e8     ecmp
+Symbol: 00006524  emdnorm
+Symbol: 0000692c eiremain
+Symbol: 00006a90     emul
+Symbol: 00006f44     ediv
+Symbol: 000074e0 e113toe.isra.0
+Symbol: 00014ea0    ezero
+Symbol: 00014eb4     eone
+Symbol: 00014ec8    etens
+Symbol: 00014fcc   emtens
+Symbol: 000150d0    bmask
+Symbol: 00000000 localeconv.c
+Symbol: 00000000 locale.c
+Symbol: 00000000 mallocr.c
+Symbol: 00000000 mbtowc_r.c
+Symbol: 00000000 memchr.c
+Symbol: 00000000  mlock.c
+Symbol: 00000000  mprec.c
+Symbol: 00015178    p05.0
+Symbol: 00000000  sbrkr.c
+Symbol: 00000000 s_frexp.c
+Symbol: 00000000 strcpy.c
+Symbol: 00000000 strlen.c
+Symbol: 00000000 strncpy.c
+Symbol: 00000000 vfprintf.c
+Symbol: 0001540c blanks.1
+Symbol: 0001541c zeroes.0
+Symbol: 00000000 wctomb_r.c
+Symbol: 00000000 assert.c
+Symbol: 00000000 mallocr.c
+Symbol: 00000000 ctype_.c
+Symbol: 00000000 fiprintf.c
+Symbol: 00000000 memcpy.c
+Symbol: 00000000 memmove-stub.c
+Symbol: 00000000 mallocr.c
+Symbol: 00000000  reent.c
+Symbol: 00000000 vfprintf.c
+Symbol: 0000c810 __sprint_r.part.0
+Symbol: 0000db94 __sbprintf
+Symbol: 000156dc blanks.1
+Symbol: 000156ec zeroes.0
+Symbol: 00000000 wsetup.c
+Symbol: 00000000  abort.c
+Symbol: 00000000 fflush.c
+Symbol: 00000000 findfp.c
+Symbol: 0000e114 __fp_lock
+Symbol: 0000e128 __fp_unlock
+Symbol: 0000e130 __sinit.part.0
+Symbol: 00000000 fputwc.c
+Symbol: 00000000 fvwrite.c
+Symbol: 00000000  fwalk.c
+Symbol: 00000000 makebuf.c
+Symbol: 00000000 signal.c
+Symbol: 00000000 signalr.c
+Symbol: 00000000  stdio.c
+Symbol: 00000000   wbuf.c
+Symbol: 00000000 wcrtomb.c
+Symbol: 00000000 writer.c
+Symbol: 00000000 closer.c
+Symbol: 00000000 fclose.c
+Symbol: 0000f974 _fclose_r.part.0
+Symbol: 00000000 fstatr.c
+Symbol: 00000000 isattyr.c
+Symbol: 00000000 lseekr.c
+Symbol: 00000000  readr.c
+Symbol: 00000000 sys_close.c
+Symbol: 00000000 sys_exit.c
+Symbol: 00000000 sys_fstat.c
+Symbol: 00000000 sys_getpid.c
+Symbol: 00000000 sys_isatty.c
+Symbol: 00000000 sys_kill.c
+Symbol: 00000000 sys_lseek.c
+Symbol: 00000000 sys_read.c
+Symbol: 00000000 sys_sbrk.c
+Symbol: 0001639c heap_end.0
+Symbol: 00000000 sys_write.c
+Symbol: 00000000 sys_conv_stat.c
+Symbol: 00000000  errno.c
+Symbol: 00000000 libgcc2.c
+Symbol: 00000000 libgcc2.c
+Symbol: 00000000 divdf3.c
+Symbol: 00000000 muldf3.c
+Symbol: 00000000  eqtf2.c
+Symbol: 00000000  getf2.c
+Symbol: 00000000  letf2.c
+Symbol: 00000000 multf3.c
+Symbol: 00000000 subtf3.c
+Symbol: 00000000 fixtfsi.c
+Symbol: 00000000 floatsitf.c
+Symbol: 00000000 extenddftf2.c
+Symbol: 00000000 trunctfdf2.c
+Symbol: 00000000         
+Symbol: 0001631c _GLOBAL_OFFSET_TABLE_
+Symbol: 000008bc     sign
+Symbol: 0000a488 _mprec_log10
+Symbol: 0000a58c __any_on
+Symbol: 0000fb7c _isatty_r
+Symbol: 00015250 __mprec_tinytens
+Symbol: 0000a870   strcpy
+Symbol: 0000c660 cleanup_glue
+Symbol: 0000fdb4  _getpid
+Symbol: 00014adc    n_row
+Symbol: 0000fbd8 _lseek_r
+Symbol: 00011604  __getf2
+Symbol: 000002d8 _set_time_int
+Symbol: 00001a14 __divdi3
+Symbol: 0000036c    print
+Symbol: 0000f448  _kill_r
+Symbol: 00011538  __eqtf2
+Symbol: 00016834 __global_pointer$
+Symbol: 0000f7a8 _wcrtomb_r
+Symbol: 0000ef24 _signal_r
+Symbol: 0000f59c  __sseek
+Symbol: 0000e464  __sinit
+Symbol: 0000f60c __swbuf_r
+Symbol: 00008a10 _setlocale_r
+Symbol: 0000e2b4 __sfmoreglue
+Symbol: 000093f4 __malloc_unlock
+Symbol: 00000e40 draw_line_fixed_color
+Symbol: 00013eb8 __floatsitf
+Symbol: 000022f0 __divsf3
+Symbol: 00000fe4 draw_line
+Symbol: 000163a8  count_y
+Symbol: 000163b0 ch_buffer
+Symbol: 0000bfc8  memmove
+Symbol: 0000e454 _cleanup
+Symbol: 000093f8  _Balloc
+Symbol: 00002bf8 __fixsfsi
+Symbol: 000012d4 draw_char
+Symbol: 00010050  __errno
+Symbol: 0000ffac _conv_stat
+Symbol: 000089f0 __localeconv_l
+Symbol: 00014ad8   n_cols
+Symbol: 0000fb18 _fstat_r
+Symbol: 00016398    errno
+Symbol: 0000f50c __seofread
+Symbol: 00000348 _get_timecmp
+Symbol: 00000534 draw_point
+Symbol: 0000278c __subsf3
+Symbol: 000009d8 draw_line_fixed_steep
+Symbol: 00016360 __SDATA_BEGIN__
+Symbol: 0000beac   memcpy
+Symbol: 0000e11c _cleanup_r
+Symbol: 00002fe0 _svfprintf_r
+Symbol: 00017000     last
+Symbol: 0000a3e0  __ratio
+Symbol: 00011748  __letf2
+Symbol: 0000efcc _raise_r
+Symbol: 0000fd44   _fstat
+Symbol: 0000bd10 __assert_func
+Symbol: 00015188 __mprec_tens
+Symbol: 000026d8  __lesf2
+Symbol: 000163a0      cnt
+Symbol: 00016394 __malloc_top_pad
+Symbol: 0000f4ac _getpid_r
+Symbol: 00000948 _div_fixed
+Symbol: 000089f8 _localeconv_r
+Symbol: 0000e678 __sfvwrite_r
+Symbol: 0000989c    __i2b
+Symbol: 0000f0a8 __sigtramp_r
+Symbol: 0000a5f0  _sbrk_r
+Symbol: 00000ca8 draw_line_fixed
+Symbol: 0000fc40  _read_r
+Symbol: 0000fa34 _fclose_r
+Symbol: 0000e098   fflush
+Symbol: 00000720 int_sqrt
+Symbol: 00016390 __malloc_max_sbrked_mem
+Symbol: 0000a164    __b2d
+Symbol: 0001048c __umoddi3
+Symbol: 0000fdbc  _isatty
+Symbol: 00016378 _global_impure_ptr
+Symbol: 0000c0e8 _realloc_r
+Symbol: 00010058 __udivdi3
+Symbol: 0000e5d0 _fputwc_r
+Symbol: 00015278 __mprec_bigtens
+Symbol: 00009610    __s2b
+Symbol: 0000ddbc    abort
+Symbol: 0000fec0    _sbrk
+Symbol: 00009e68   __mcmp
+Symbol: 0000e484 __fp_lock_all
+Symbol: 0000c6f4 _reclaim_reent
+Symbol: 00009744 __hi0bits
+Symbol: 000163a4    black
+Symbol: 000003c8 trap_handler
+Symbol: 00002624  __gtsf2
+Symbol: 00013da4 __fixtfsi
+Symbol: 0fffffff __stack_top
+Symbol: 0000079c plot_line
+Symbol: 00009b80 __pow5mult
+Symbol: 00002d70 __clzsi2
+Symbol: 0000e474 __sfp_lock_acquire
+Symbol: 00000914 sign_fixed
+Symbol: 00009328   memchr
+Symbol: 00015830 terminal_buff_size
+Symbol: 00002efc _sprintf_r
+Symbol: 00005a60  _free_r
+Symbol: 00008a8c __locale_mb_cur_max
+Symbol: 00016380 __malloc_sbrk_base
+Symbol: 00000000   _start
+Symbol: 00002ea8     rand
+Symbol: 0000fe20   _lseek
+Symbol: 00009cd8 __lshift
+Symbol: 00011748  __lttf2
+Symbol: 0000f260   signal
+Symbol: 00011538  __netf2
+Symbol: 00000430 timer_interrupt_handler
+Symbol: 00002c68 __floatsisf
+Symbol: 0000aa54 __ssprint_r
+Symbol: 000163ac  count_x
+Symbol: 00008978 _ldcheck
+Symbol: 0000994c __multiply
+Symbol: 0000a9ac  strncpy
+Symbol: 0001700c __malloc_current_mallinfo
+Symbol: 00015840   banner
+Symbol: 0000a27c    __d2b
+Symbol: 00001684 draw_str
+Symbol: 0001400c __extenddftf2
+Symbol: 0000f918 _close_r
+Symbol: 00014ad0 char_width
+Symbol: 00000608 draw_point_rand_color
+Symbol: 0000dc54 __swsetup_r
+Symbol: 00010890 __divdf3
+Symbol: 0000e320    __sfp
+Symbol: 0000a524 __copybits
+Symbol: 00017034 __BSS_END__
+Symbol: 00015f0c __malloc_av_
+Symbol: 0000e480 __sinit_lock_release
+Symbol: 00010f70 __muldf3
+Symbol: 0000f4b0  __sread
+Symbol: 000093f0 __malloc_lock
+Symbol: 0000e038 _fflush_r
+Symbol: 0000bd78 _calloc_r
+Symbol: 00014ad4 char_height
+Symbol: 00016388 __bss_start
+Symbol: 00002dbc   memset
+Symbol: 0000185c     main
+Symbol: 0001638c __malloc_max_total_mem
+Symbol: 0000f794  __swbuf
+Symbol: 00002e98    srand
+Symbol: 000026d8  __ltsf2
+Symbol: 0000f604 __sclose
+Symbol: 0000faa4   fclose
+Symbol: 00008b14 _malloc_r
+Symbol: 0000bce0 __ascii_wctomb
+Symbol: 00000324 _get_time
+Symbol: 0000be28 _fiprintf_r
+Symbol: 0000f310 _init_signal
+Symbol: 0000eb10   _fwalk
+Symbol: 000092b4 _mbtowc_r
+Symbol: 000001a8 _trap_handler
+Symbol: 00005924 _malloc_trim_r
+Symbol: 0000a6f4   strcmp
+Symbol: 0000db7c vfiprintf
+Symbol: 0001188c __multf3
+Symbol: 000006d8 plot_point
+Symbol: 00002f68  sprintf
+Symbol: 00014ba8 __clz_tab
+Symbol: 00016388 _PathLocale
+Symbol: 00001158 draw_line_color
+Symbol: 00002624  __gesf2
+Symbol: 0000f8b0 _write_r
+Symbol: 00008a98 setlocale
+Symbol: 0001637c _impure_ptr
+Symbol: 0000ddd4 __sflush_r
+Symbol: 00011604  __gttf2
+Symbol: 0000ac10 _svfiprintf_r
+Symbol: 00014980      lut
+Symbol: 000092c0 __ascii_mbtowc
+Symbol: 0001287c __subtf3
+Symbol: 0000a104    __ulp
+Symbol: 0000e494 __fp_unlock_all
+Symbol: 00015838 frame_buffer
+Symbol: 00008a04 localeconv
+Symbol: 0000edf8 __swhatbuf_r
+Symbol: 00015830 __DATA_BEGIN__
+Symbol: 0000ff5c   _write
+Symbol: 00016388   _edata
+Symbol: 00017034     _end
+Symbol: 0000e4a4 __fputwc
+Symbol: 0001583c    white
+Symbol: 0000f514 __swrite
+Symbol: 00016384 __malloc_trim_threshold
+Symbol: 0000be60 fiprintf
+Symbol: 0000c91c _vfiprintf_r
+Symbol: 0000ebb4 _fwalk_reent
+Symbol: 00000588 draw_point_color
+Symbol: 00009ec0  __mdiff
+Symbol: 0000fdfc    _kill
+Symbol: 000014ac blink_cursor
+Symbol: 0000e478 __sfp_lock_release
+Symbol: 00007650 _ldtoa_r
+Symbol: 0001546c  _ctype_
+Symbol: 0000fe70    _read
+Symbol: 0000fd00    _exit
+Symbol: 0000ec68 __smakebuf_r
+Symbol: 0000a920   strlen
+Symbol: 0000eec8 _init_signal_r
+Symbol: 00000b3c draw_line_fixed_steep_color
+Symbol: 0000bd64 __assert
+Symbol: 00000884      abs
+Symbol: 0000c904 __sprint_r
+Symbol: 00015834 terminal_i
+Symbol: 0000bcd4 _wctomb_r
+Symbol: 0000164c clear_screen
+Symbol: 000097bc __lo0bits
+Symbol: 0000f36c __sigtramp
+Symbol: 0000f820  wcrtomb
+Symbol: 0000a64c    frexp
+Symbol: 00001e94 __addsf3
+Symbol: 00015da0 __global_locale
+Symbol: 00014568 consolas_8pt
+Symbol: 00014204 __trunctfdf2
+Symbol: 0000e5fc   fputwc
+Symbol: 0000fca8   _close
+Symbol: 0000f188    raise
+Symbol: 0000e47c __sinit_lock_acquire
+Symbol: 000094c4 __multadd
+Symbol: 000094a0   _Bfree
+Frame buffer allocated
+Loading ROM...
+Trying to initialize at Address 00000000, buff_size 00016388
+Creating Window
+----------------------------------------------------
+-----------------Testing Timer RTC------------------
+----------------------------------------------------
+IMM_ACCESS: 00
+IMM: 001100000101
+Currently on timer handler 0
+timecmp 0x9b00007f8b051fe2 time 0x0000007f8b051fe2
+Currently on timer handler 1
+timecmp 0xfe00007f8b052009 time 0x0000007f8b051fe2
+In main, before trap handler!
+Illegal Instruction 0xaeaeaeae at: 0x00001878
+Currently on trap handler! :)
+mepc: 0x00001878
+mtval: 0xaeaeaeae
+mcause: 0x00000002
+IMM_ACCESS: 00
+IMM: 001101000001
+Back from the trap handler!!!
+Finish Creating Window
+Entering thread loop
+ _   _             _ _       _____                
+| | | |           (_) |     /  __ \               
+| | | | __ _ _ __  _| | __ _| /  \/ ___  _ __ ___  
+| | | |/ _` | '_ \| | |/ _` | |    / _ \| '__/ _ \ 
+\ \_/ / (_| | | | | | | (_| | \__/\ (_) | | |  __/ 
+ \___/ \__,_|_| |_|_|_|\__,_|\____/\___/|_|  \___| 
+By: Benjamin Herrera Navarro
+Date: 1/16/2021
+8:04AM
+Instructions per second: 11261274	FPS: 134
+Currently on timer handler 2
+timecmp 0x7800007f8b05200a time 0x7800007f8b05200a
+Currently on timer handler 3
+timecmp 0xf200007f8b052031 time 0x7800007f8b05200a
+Instructions per second: 12868678	FPS: 156
+Currently on timer handler 4
+timecmp 0x7900007f8b052032 time 0x7800007f8b052032
+Currently on timer handler 5
+timecmp 0xf100007f8b052059 time 0x7800007f8b052032
+Instructions per second: 12680537	FPS: 148
+Currently on timer handler 6
+timecmp 0x7a00007f8b05205a time 0x7800007f8b05205a
+Currently on timer handler 7
+timecmp 0x4a00007f8b052082 time 0x7800007f8b05205b
+Instructions per second: 12762575	FPS: 158
+Currently on timer handler 8
+timecmp 0xd400007f8b052082 time 0x7800007f8b052082
+Currently on timer handler 9
+timecmp 0x4700007f8b0520aa time 0x7800007f8b052083
+Instructions per second: 12705170	FPS: 154
+Currently on timer handler 10
+timecmp 0xd700007f8b0520aa time 0x0000007f8b0520aa
+Currently on timer handler 11
+timecmp 0x5c00007f8b0520d2 time 0x0000007f8b0520ab
+Restoring terminal defaults

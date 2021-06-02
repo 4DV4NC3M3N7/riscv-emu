@@ -21,6 +21,7 @@ One of the goals of this program is to have a TUI and a GUI. To which interface 
 sudo apt-get update
 sudo apt-get install g++
 sudo apt-get install libsfml-dev
+sudo apt-get install libgtk-3-dev
 ```
 ## RISC-V Toolchain
 RISCV Toolchain in order to compile the tests

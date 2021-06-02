@@ -221,6 +221,7 @@ void CORE::trace(uint32_t data_fetch)
         {&rd, &rs1, &rs2},
         {&zero, &zero, &zero},
         {&zero, &zero, &zero},
+        {&zero, &zero, &zero},
         //Zicsr
         {&rd, &rs1, &imm12},
         {&rd, &rs1, &imm12},
@@ -279,6 +280,7 @@ void CORE::trace(uint32_t data_fetch)
         {"0000000xxxxxxxxxx101xxxxx0110011", "SRL rd:%d, rs1:%d, rs2:%d\n"},        
         {"0100000xxxxxxxxxx101xxxxx0110011", "SRA rd:%d, rs1:%d, rs2:%d\n"},
         {"0000000xxxxxxxxxx110xxxxx0110011", "OR rd:%d, rs1:%d, rs2:%d\n"},
+        {"xxxxxxxxxxxxxxxxx000xxxxx0001111", "FENCE\n"},
         {"0000000xxxxxxxxxx111xxxxx0110011", "AND rd:%d, rs1:%d, rs2:%d\n"},
         {"00000000000000000000000001110011", "ECALL\n"},
         {"00000000000100000000000001110011", "EBREAK\n"},
@@ -329,7 +331,7 @@ void CORE::trace(uint32_t data_fetch)
             format.append((opcode_table[i][1]));
             char buffer [50];
             sprintf(buffer, format.c_str(), PC, *trace_args[i][0], *trace_args[i][1], *trace_args[i][2]);
-            //printf(buffer);
+            printf(buffer);
             str_trace_buffer.push_back(buffer);
             //while(true);
             break;
@@ -1181,7 +1183,10 @@ void CORE::execute()
 
                     break;
             }
-        break;
+            //Basically ignore fense
+            case 0b0001111:
+                PC += 0x4;
+            break;
         break;
         default:
             printf("Illegal Instruction 0x%08x at: 0x%08x\n", data_fetch, PC);

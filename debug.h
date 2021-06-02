@@ -3,7 +3,7 @@
 
 //Uncomment to print debuging data
 //#define __DEBUG__
-//#define __TRACING__
+#define __TRACING__
 //#define __INS_COUNT__
 //
 
