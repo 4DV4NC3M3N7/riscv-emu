@@ -9,14 +9,13 @@ TIMER::TIMER(uint32_t min_address, uint32_t max_address)
 {
     this->min_address = min_address;
     this->max_address = max_address;
-    interrupt_lock = new std::mutex;
 }
 
 uint8_t TIMER::read(uint32_t addr)
 {
     #ifdef __DEBUG__
-        printf("Timer: Read: D -> 0x%08x, A -> 0x%02x\n", timecmp[(addr & 0xf)], addr);
-        printf("Timer: Read: D -> 0x%08x, A -> 0x%02x\n", time[(addr & 0xf)], addr);
+        //printf("Timer: Read: D -> 0x%08x, A -> 0x%02x\n", timecmp[(addr & 0xf)], addr);
+        //printf("Timer: Read: D -> 0x%08x, A -> 0x%02x\n", timecmp[(addr & 0xf)], addr);
     #endif
     switch ((addr & 0xf))
     {
@@ -34,25 +33,25 @@ uint8_t TIMER::read(uint32_t addr)
 uint32_t TIMER::read32(uint32_t addr)
 {
     #ifdef __DEBUG__
-        printf("Timer: Read: D -> 0x%08x, A -> 0x%02x\n", timecmp[(addr & 0xf)], addr);
+        //printf("Timer: Read: D -> 0x%08x, A -> 0x%02x\n", timecmp[(addr & 0xf)], addr);
     #endif
 
     switch ((addr & 0xf))
     {
         case 0x00000000 ... 0x00000003:
-            //printf("Timer32: Read: D -> 0x%08x, A -> 0x%02x\n", (timers.time&0xffffffff), addr);
+            printf("Timer32: Read: D -> 0x%08x, A -> 0x%02x\n", (timers.time&0xffffffff), addr);
             return (timers.time&0xffffffff);
         break;
         case 0x00000004 ... 0x00000007:
-            //printf("Timer32: Read: D -> 0x%08x, A -> 0x%02x\n", ((timers.time >> 32) & 0xffffffff), addr);
+            printf("Timer32: Read: D -> 0x%08x, A -> 0x%02x\n", ((timers.time >> 32) & 0xffffffff), addr);
             return ((timers.time >> 32) & 0xffffffff);
         break;
         case 0x00000008 ... 0x0000000b: 
-            //printf("Timer32: Read: D -> 0x%08x, A -> 0x%02x\n", (timers.timecmp&0xffffffff), addr);
+            printf("Timer32: Read: D -> 0x%08x, A -> 0x%02x\n", (timers.timecmp&0xffffffff), addr);
             return (timers.timecmp&0xffffffff);
         break;
         case 0x0000000c ... 0x0000000f: 
-            //printf("Timer32: Read: D -> 0x%08x, A -> 0x%02x\n", ((timers.timecmp >> 32) & 0xffffffff), addr);
+            printf("Timer32: Read: D -> 0x%08x, A -> 0x%02x\n", ((timers.timecmp >> 32) & 0xffffffff), addr);
             return ((timers.timecmp >> 32) & 0xffffffff);
         break;
     default: return 0x00;
@@ -116,15 +115,18 @@ void TIMER::timer_handle()
     
     if((uint64_t)timers.timecmp <= (uint64_t)timers.time)
     {
-        //printf("timecmp 0x%016llx time 0x%016llx %s\n", timers.timecmp, timers.time, (interrupt.load(std::memory_order_relaxed)? "IRQ Enabled": "IRQ Disabled"));
+        //printf("timecmp 0x%016llx time 0x%016llx\n", (uint64_t)timers.timecmp, (uint64_t)timers.time);
         //printf("Setting to true\n");
         //printf("timecmp 0x%016x\n", timers.timecmp);
         //printf("time 0x%016x\n", timers.time);
-        interrupt.store(true, std::memory_order_acq_rel);
+        //interrupt_lock.lock();
+        interrupt.store(true, std::memory_order_release);
+        //interrupt_lock.unlock();
+
     }
     else
     {
         //printf("Setting to false\n");
-        interrupt.store(false, std::memory_order_acq_rel);
+        interrupt.store(false, std::memory_order_release);
     }
 }

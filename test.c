@@ -40,6 +40,17 @@ void trap_handler(uint32_t mepc, uint32_t mcause, uint32_t mtval)
   print(buffer);
 }
 
+void to_hex(uint64_t num, int sizeofnum, char* buffer)
+{
+    char characters[] = "0123456789ABCDEF";
+    for(int i = 0;i < (sizeofnum<<1);i++)
+    {
+        buffer[i] = characters[((num >> ((sizeofnum<<3) - (i << 2))-4)&0xf)];
+    }
+    buffer[sizeofnum<<1] = '\0';
+}
+
+
 uint32_t cnt;
 void timer_interrupt_handler()
 {
@@ -52,9 +63,13 @@ void timer_interrupt_handler()
 
   volatile uint64_t* time = ((uint64_t*)0x10000010);
   volatile uint64_t* timecmp = ((uint64_t*)0x10000018);
-  sprintf(buffer, "timecmp 0x%016llx time 0x%016llx\n", *timecmp, *time);
+  char buf1 [20];
+  char buf2 [20];
+  to_hex(*timecmp, sizeof(uint64_t), buf1);
+  to_hex(*time, sizeof(uint64_t), buf2);
+  sprintf(buffer, "timecmp %s time %s\n", buf1, buf2);
   print(buffer);
-  *timecmp = *time + 10000;
+  *timecmp = *time + 0xffff;
 
 }
 

@@ -24,7 +24,7 @@ public:
     void write32(uint32_t data, uint32_t addr);
     void timer_handle();
     std::atomic<bool> interrupt;
-    std::mutex* interrupt_lock;
+    std::mutex interrupt_lock;
     struct
     {
         union

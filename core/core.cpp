@@ -466,14 +466,18 @@ void CORE::execute()
 
     //Setup interrupt pending bits
     //CPU core main timer
-    if(timer->interrupt.load(std::memory_order_acq_rel))
-    {
-        CSR[CSR_MIP] |=  (1 << 7);
-    }
-    else
-    {
-        CSR[CSR_MIP] &=  ~(1 << 7);
-    }
+    //if(timer->interrupt_lock.try_lock())
+    //{
+        if(timer->interrupt.load(std::memory_order_consume))
+        {
+            CSR[CSR_MIP] |=  (1 << 7);
+        }
+        else
+        {
+            CSR[CSR_MIP] &=  ~(1 << 7);
+        }
+        timer->interrupt_lock.try_lock();
+    //}
         
     //Do CSR operations before instruction execution
     //Do interrupts first
@@ -725,15 +729,7 @@ void CORE::execute()
                         REGS[RD_DECODE(data_fetch)] = ((int32_t)REGS[RS1_DECODE(data_fetch)] < (int32_t)REGS[RS2_DECODE(data_fetch)])? 1 : 0;
                         break;
                     case SLTU_FUNC3:
-                        //std::cout << "SLT Executed" << std::endl;
-                        if(RS1_DECODE(data_fetch) == 0x00)
-                        {
-                            REGS[RD_DECODE(data_fetch)]= 0;
-                        }
-                        else
-                        {
-                            REGS[RD_DECODE(data_fetch)] = ((uint32_t)REGS[RS1_DECODE(data_fetch)] < (uint32_t)REGS[RS2_DECODE(data_fetch)])? 1 : 0;                    
-                        }
+                        REGS[RD_DECODE(data_fetch)] = ((uint32_t)REGS[RS1_DECODE(data_fetch)] < (uint32_t)REGS[RS2_DECODE(data_fetch)])? 1 : 0;                    
 
                         break;
                     case XOR_FUNC3:
@@ -744,14 +740,7 @@ void CORE::execute()
                         if(FUNC7_DECODE(data_fetch) == SRA_FUNC7)
                         {
                             //std::cout << "SRA Executed" << std::endl;
-                            if ((int32_t)REGS[RS1_DECODE(data_fetch)] < 0 && (REGS[RS1_DECODE(data_fetch)] & 0x1f) > 0)
-                            {
-                                REGS[RD_DECODE(data_fetch)] = (int32_t)REGS[RS1_DECODE(data_fetch)] >> REGS[RS2_DECODE(data_fetch)] | ~(~0U >> REGS[RS1_DECODE(data_fetch)]);
-                            }
-                            else
-                            {
-                                REGS[RD_DECODE(data_fetch)] = (int32_t)REGS[RS1_DECODE(data_fetch)] >> REGS[RS2_DECODE(data_fetch)];
-                            }
+                            REGS[RD_DECODE(data_fetch)] = (int32_t)REGS[RS1_DECODE(data_fetch)] >> (uint32_t)REGS[RS2_DECODE(data_fetch)];
                         }
                         else
                         {
