@@ -60,4 +60,4 @@ second the number of instruction executed per second.
 The code that the emulator will be executing is on crt0.s, timer.s and test.c which includes the main function and exeption handler written in C.
 
 ### Known Issues.
-The timer interrupts are not synchronized correctly yet. 
+  <s>The timer interrupts are not synchronized correctly yet.</s>
