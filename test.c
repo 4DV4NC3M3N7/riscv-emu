@@ -69,7 +69,7 @@ void timer_interrupt_handler()
   to_hex(*time, sizeof(uint64_t), buf2);
   sprintf(buffer, "timecmp %s time %s\n", buf1, buf2);
   print(buffer);
-  *timecmp = *time + 0xffff;
+  *timecmp = *time + 0xfff;
 
 }
 
