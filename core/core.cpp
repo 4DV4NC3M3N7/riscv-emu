@@ -464,18 +464,14 @@ void CORE::execute()
 
     //Setup interrupt pending bits
     //CPU core main timer
-    //if(timer->interrupt_lock.try_lock())
-    //{
-        if(timer->interrupt.load(std::memory_order_consume))
-        {
-            CSR[CSR_MIP] |=  (1 << 7);
-        }
-        else
-        {
-            CSR[CSR_MIP] &=  ~(1 << 7);
-        }
-        timer->interrupt_lock.try_lock();
-    //}
+    if(timer->timers.timecmp <= timer->timers.time)
+    {
+        CSR[CSR_MIP] |=  (1 << 7);
+    }
+    else
+    {
+        CSR[CSR_MIP] &=  ~(1 << 7);
+    }
         
     //Do CSR operations before instruction execution
     //Do interrupts first
