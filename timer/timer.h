@@ -31,10 +31,9 @@ public:
         {
             uint8_t time[sizeof(uint64_t)];
             uint8_t timecmp[sizeof(uint64_t)];
-        } raw;
-        
-        std::atomic<uint64_t> time;
-        std::atomic<uint64_t> timecmp;
+        } raw;        
+        uint64_t time;
+        uint64_t timecmp;
     }timers;
 private:
     bool once;
