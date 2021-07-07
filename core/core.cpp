@@ -1170,9 +1170,9 @@ void CORE::execute()
                     break;
             }
             //Basically ignore fense
-            case 0b0001111:
-                PC += 0x4;
-            break;
+            //case 0b0001111:
+            //    PC += 0x4;
+            //break;
         break;
         default:
             printf("Illegal Instruction 0x%08x at: 0x%08x\n", data_fetch, PC);

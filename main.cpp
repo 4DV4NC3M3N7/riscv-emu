@@ -413,21 +413,21 @@ void setup_cmd_options(GtkApplication *app)
 
 int main(int argc, char *argv[])
 {
-    GtkApplication *app;
-    int status;
+//     GtkApplication *app;
+//     int status;
 
-    //gtk_init(&argc, &argv);
-    app = gtk_application_new ("git.bitglitcher.riscv_emu", G_APPLICATION_FLAGS_NONE);
-    g_signal_connect (app, "activate", G_CALLBACK (activate), NULL);
-    setup_cmd_options(app);
-    status = g_application_run (G_APPLICATION (app), argc, argv);
-    g_object_unref (app);
-    return 0;
+//     //gtk_init(&argc, &argv);
+//     app = gtk_application_new ("git.bitglitcher.riscv_emu", G_APPLICATION_FLAGS_NONE);
+//     g_signal_connect (app, "activate", G_CALLBACK (activate), NULL);
+//     setup_cmd_options(app);
+//     status = g_application_run (G_APPLICATION (app), argc, argv);
+//     g_object_unref (app);
+//     return 0;
 
 
     
-//
-    //    return status;
+// //
+//     //    return status;
     struct arguments arguments;
     arguments.graphical = false;
     arguments.call_trace = false;
