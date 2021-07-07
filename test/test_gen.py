@@ -12,26 +12,26 @@ uart_base = 0x10000000
 
 tests = {
 #    #OP
-#    "add": 5000,
-#    "sub": 5000,
-#    "sll": 5000,
-#    "slt": 5000,
-#    "sltu": 5000,
-#    "xor": 5000,
-#    "srl": 5000,
-#    "sra": 5000,
-#    "or": 5000,
-#    "and": 5000,
+    "add": 5000,
+    "sub": 5000,
+    "sll": 5000,
+    "slt": 5000,
+    "sltu": 5000,
+    "xor": 5000,
+    "srl": 5000,
+    "sra": 5000,
+    "or": 5000,
+    "and": 5000,
 #    #OP_IM
-#    "slli": 5000,
+    "slli": 5000,
     "addi": 5000,
-#    "slti": 5000,
-#    "sltiu": 5000,
-#    "xori": 5000,
-#    "srli": 5000,
-#    "srai": 5000,
-#    "ori": 5000,
-#    "andi": 5000
+    "slti": 5000,
+    "sltiu": 5000,
+    "xori": 5000,
+    "srli": 5000,
+    "srai": 5000,
+    "ori": 5000,
+    "andi": 5000
 }
 
 #tests = {
@@ -140,6 +140,21 @@ def check_requirements(ins_buffer):
     #ins_buffer.append("")
 
     ins_buffer.append("bne x{0}, x{1}, check_requirements_lui_fail".format(rd, rs1));
+
+    return ins_buffer
+
+#For this particular test, the addi and sll instructions are needed
+def test_lui(ins_buffer, prefix):
+    return ins_buffer
+
+
+def gen_test_branchdef(ntest, ins_op):
+    #empty instruction buffer
+    ins_buffer = []
+
+    #Generate NOP
+    ins_buffer.append("addi x0, x0, 0")
+    ins_buffer.append("fail_branch")
 
     return ins_buffer
 
