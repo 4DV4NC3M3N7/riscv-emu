@@ -641,13 +641,13 @@ void CORE::execute()
                     case DIV:
                             if(REGS[RS2_DECODE(data_fetch)] == 0)
                             {
-                                REGS[RD_DECODE(data_fetch)] = -1;
+                                REGS[RD_DECODE(data_fetch)] = UINT32_MAX;
                             }
                             else
                             {
-                                if((REGS[RS2_DECODE(data_fetch)] == -1) && (REGS[RS1_DECODE(data_fetch)] == 0xffffffff))
+                                if((REGS[RS2_DECODE(data_fetch)] == -1) && (REGS[RS1_DECODE(data_fetch)] == INT32_MIN))
                                 {
-                                    REGS[RD_DECODE(data_fetch)] = -4294967297;
+                                    REGS[RD_DECODE(data_fetch)] = (int32_t)REGS[RS1_DECODE(data_fetch)];
                                 }
                                 else
                                 {
@@ -658,7 +658,7 @@ void CORE::execute()
                     case DIVU:
                             if(REGS[RS2_DECODE(data_fetch)] == 0)
                             {
-                                REGS[RD_DECODE(data_fetch)] = 0xffffffff;
+                                REGS[RD_DECODE(data_fetch)] = INT32_MAX;
                             }
                             else
                             {
@@ -672,7 +672,7 @@ void CORE::execute()
                             }
                             else
                             {
-                                if((REGS[RS2_DECODE(data_fetch)] == -1) && (REGS[RS1_DECODE(data_fetch)] == 0xffffffff))
+                                if((REGS[RS2_DECODE(data_fetch)] == -1) && (REGS[RS1_DECODE(data_fetch)] == INT32_MIN))
                                 {
                                     REGS[RD_DECODE(data_fetch)] = 0;
                                 }
@@ -931,6 +931,7 @@ void CORE::execute()
                     //std::cout << "SH Executed" << std::endl;
                     bus->write((REGS[RS2_DECODE(data_fetch)] & 0x00ff) >> 0, (REGS[RS1_DECODE(data_fetch)] + SIGNEX(S_IMM12_DECODE(data_fetch), 11)) + 0x0);
                     bus->write((REGS[RS2_DECODE(data_fetch)] & 0xff00) >> 8, (REGS[RS1_DECODE(data_fetch)] + SIGNEX(S_IMM12_DECODE(data_fetch), 11)) + 0x1);
+                   // bus->write16(REGS[RS2_DECODE(data_fetch)], (REGS[RS1_DECODE(data_fetch)] + SIGNEX(S_IMM12_DECODE(data_fetch), 11)));
                 break;
                 case SW_FUNC3:
                     //std::cout << "SW Executed" << std::endl;
