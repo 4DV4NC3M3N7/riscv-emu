@@ -16,7 +16,7 @@ registers::registers(/* args */)
     register_names.push_back("PC");
     register_names.push_back("IR");
 
-    //Add registers to the grid
+    //Add registers to the vector
     for(int i = 0;i < 32;i++)
     {
         regs_t* register_field = new regs_t;
@@ -37,6 +37,7 @@ registers::registers(/* args */)
         register_fields.push_back(register_field);
     }
 
+    //Arrange registers into the grid
     gtk_grid_set_column_spacing(GTK_GRID(grid), 10);
     gtk_grid_set_row_spacing(GTK_GRID(grid), 10);
     for(int i = 0; i < 8;i++)
