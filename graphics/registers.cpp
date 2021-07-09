@@ -5,7 +5,7 @@
 registers::registers(/* args */)
 {
     grid = gtk_grid_new();
-
+    label = gtk_label_new("Registers");
     //Generate Register names
     std::vector<std::string> register_names;
     for(int i = 0;i < 32;i++)
@@ -55,6 +55,17 @@ registers::registers(/* args */)
     gtk_grid_attach(GTK_GRID(grid), GTK_WIDGET(register_fields[32]->entry), 1, 8, 1, 1);
     gtk_grid_attach(GTK_GRID(grid), GTK_WIDGET(register_fields[33]->label), 2, 8, 1, 1);
     gtk_grid_attach(GTK_GRID(grid), GTK_WIDGET(register_fields[33]->entry), 3, 8, 1, 1);
+}
+
+
+void registers::attach_to_notebook(GtkNotebook* notebook)
+{
+    gtk_notebook_append_page(notebook, grid, label);
+}
+
+void registers::deattach_to_notebook(GtkNotebook* notebook)
+{
+    gtk_notebook_detach_tab(notebook, grid);
 }
 
 registers::~registers()

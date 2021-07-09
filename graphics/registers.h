@@ -19,7 +19,10 @@ class registers
         registers(/* args */);
         ~registers();
         GtkWidget* get_widget();
+        void attach_to_notebook(GtkNotebook* notebook);
+        void deattach_to_notebook(GtkNotebook* notebook);
     private:
         GtkWidget* grid;
+        GtkWidget* label;
         std::vector<regs_t*> register_fields;
 };
