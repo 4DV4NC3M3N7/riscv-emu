@@ -53,6 +53,12 @@
         "streambuf": "cpp",
         "thread": "cpp",
         "typeinfo": "cpp",
-        "memory_map.h": "c"
+        "memory_map.h": "c",
+        "bit": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp",
+        "ranges": "cpp",
+        "stop_token": "cpp",
+        "cinttypes": "cpp"
     }
 }
