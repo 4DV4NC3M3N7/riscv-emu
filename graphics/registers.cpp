@@ -21,6 +21,7 @@ registers::registers(/* args */)
     {
         regs_t* register_field = new regs_t;
         register_field->entry = GTK_ENTRY(gtk_entry_new());
+        gtk_entry_set_text(register_field->entry, "0x00000000");
         gtk_entry_set_max_width_chars(register_field->entry, strlen("0x00000000"));
         gtk_entry_set_width_chars(register_field->entry, strlen("0x00000000"));
         register_field->label = GTK_LABEL(gtk_label_new(register_names[i].c_str()));
@@ -30,6 +31,7 @@ registers::registers(/* args */)
     for(int i = 32;i < 34;i++)
     {
         regs_t* register_field = new regs_t;
+        gtk_entry_set_text(register_field->entry, "0x00000000");
         register_field->entry = GTK_ENTRY(gtk_entry_new());
         gtk_entry_set_max_width_chars(register_field->entry, strlen("0x00000000"));
         gtk_entry_set_width_chars(register_field->entry, strlen("0x00000000"));
@@ -90,4 +92,28 @@ registers::~registers()
 GtkWidget* registers::get_widget()
 {
     return GTK_WIDGET(grid);
+}
+
+void registers::update(uint32_t* regs, __uint32_t PC, __uint32_t IR)
+{
+    //Update all gtk entries with new values
+    for(int i = 0;i < register_fields.size();i++)
+    {
+        if(i < 32)
+        {
+            gtk_entry_set_text(register_fields[i]->entry, std::to_string(regs[i]).c_str());
+        }
+        else
+        {
+            if(i == 32)
+            {
+                gtk_entry_set_text(register_fields[i]->entry, std::to_string(PC).c_str());
+            }
+            else if(i == 33)
+            {
+                gtk_entry_set_text(register_fields[i]->entry, std::to_string(IR).c_str());
+            }
+        }
+    }
+
 }

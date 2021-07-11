@@ -21,6 +21,8 @@ class registers
         GtkWidget* get_widget();
         void attach_to_notebook(GtkNotebook* notebook);
         void deattach_to_notebook(GtkNotebook* notebook);
+        //This function should only be called by the main app thread, and not the emulator thread.
+        void update(uint32_t* regs, __uint32_t PC, __uint32_t IR);
     private:
         GtkWidget* grid;
         GtkWidget* label;
