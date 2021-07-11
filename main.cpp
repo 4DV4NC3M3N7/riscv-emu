@@ -26,6 +26,9 @@
 #include "graphics/graphics.h"
 #include <gtk-3.0/gtk/gtk.h>
 #include <gtk-3.0/gtk/gtkbuilder.h>
+#include <gdk/gdk.h>
+#include "graphics/registers.h"
+#include "graphics/console.h"
 
 
 char getch(void)
@@ -315,12 +318,18 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
     return 0;
 }
 
-static void
-print_hello (GtkWidget *widget,
-             gpointer   data)
+//This function will contain the main core thread. This will call the gui_update function,
+//if fast mode is not enabled
+std::atomic<bool> fast_mode;
+void execute_emulator_thread()
 {
-  g_print ("Hello World\n");
+
 }
+
+//Different tabs that must be created at runtime
+registers* register_tab;
+console* console_tab;
+
 
 static void
 activate (GtkApplication *app,
@@ -343,11 +352,15 @@ activate (GtkApplication *app,
     gtk_application_add_window(GTK_APPLICATION(app), GTK_WINDOW(window));
 
 
-    GtkWidget* notebook = GTK_WIDGET(gtk_builder_get_object(builder, "main_context"));
+    GtkWidget* main_context = GTK_WIDGET(gtk_builder_get_object(builder, "main_context"));
+    GtkWidget* context1 = GTK_WIDGET(gtk_builder_get_object(builder, "context1"));
     
-    gtk_notebook_append_page (GTK_NOTEBOOK(notebook),
-                          NULL,
-                          NULL);
+    register_tab = new registers;
+    console_tab = new console;
+
+    //Attack tabs
+    register_tab->attach_to_notebook(GTK_NOTEBOOK(main_context));
+    console_tab->attach_to_notebook(GTK_NOTEBOOK(context1));
     //g_object_unref(builder);
 
     //gtk_widget_show(window);                
@@ -413,21 +426,22 @@ void setup_cmd_options(GtkApplication *app)
 
 int main(int argc, char *argv[])
 {
-//     GtkApplication *app;
-//     int status;
 
-//     //gtk_init(&argc, &argv);
-//     app = gtk_application_new ("git.bitglitcher.riscv_emu", G_APPLICATION_FLAGS_NONE);
-//     g_signal_connect (app, "activate", G_CALLBACK (activate), NULL);
-//     setup_cmd_options(app);
-//     status = g_application_run (G_APPLICATION (app), argc, argv);
-//     g_object_unref (app);
-//     return 0;
+    GtkApplication *app;
+    int status;
+    
+    //gtk_init(&argc, &argv);
+    app = gtk_application_new ("git.bitglitcher.riscv_emu", G_APPLICATION_FLAGS_NONE);
+    g_signal_connect (app, "activate", G_CALLBACK (activate), NULL);
+    setup_cmd_options(app);
+    status = g_application_run (G_APPLICATION (app), argc, argv);
+    g_object_unref (app);
+    return 0;
 
 
     
-// //
-//     //    return status;
+//
+    //    return status;
     struct arguments arguments;
     arguments.graphical = false;
     arguments.call_trace = false;
