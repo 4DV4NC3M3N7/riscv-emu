@@ -41,6 +41,13 @@ void TERMINAL::write(uint8_t data, uint32_t addr)
     #ifdef __DEBUG__
     printf("Terminal: Write: D -> 0x%08x, A -> 0x%02x\n", data, addr);
     #endif
-    printf("%c", data);
-    std::cout.flush();
+    if(graphical)
+    {
+        output_buffer.push(data);
+    }
+    else
+    {
+        printf("%c", data);
+        std::cout.flush();
+    }
 }

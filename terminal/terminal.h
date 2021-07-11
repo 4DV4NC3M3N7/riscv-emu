@@ -20,6 +20,9 @@ public:
 
     //External thread handles input and output
     std::queue<char> input_buffer;
+    std::queue<char> output_buffer;
+    //When graphical it wont use the printf and cin function
+    bool graphical;
 private:
 
 };
