@@ -273,6 +273,7 @@ void generate_steady_clock(TIMER* timer)
     }
 }
 
+
 const char *argp_program_version = "riscv-emu";
 const char *argp_program_bug_address = "<bitglitcher@github.com>";
 static char doc[] = "RISCV Emulator.";
@@ -321,15 +322,106 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state) {
 //This function will contain the main core thread. This will call the gui_update function,
 //if fast mode is not enabled
 std::atomic<bool> fast_mode;
-void execute_emulator_thread()
-{
-
-}
 
 //Different tabs that must be created at runtime
 registers* register_tab;
 console* console_tab;
 
+BUS bus;
+MEMORY main_memory(MEMORY_H_ADDR, MEMORY_L_ADDR, MEMORY_H_ADDR);
+DISPLAY display(DISPLAY_L_ADDR, DISPLAY_H_ADDR, DISPLAY_HEIGHT, DISPLAY_WIDTH);
+TERMINAL terminal(TERMINAL_ADDR_L, TERMINAL_ADDR_H);
+TIMER timer(TIMER_L_ADDR, TIMER_H_ADDR);
+EXT_MEM ext_mem(EXT_L_ADDR, EXT_H_ADDR);
+elf_reader* reader;
+CORE* core;
+
+int core_setup(std::string input_file)
+{
+    bus.add(&main_memory);
+    bus.add(&terminal);
+    bus.add(&display);
+    bus.add(&timer);
+    bus.add(&ext_mem);
+    std::ifstream binary;
+    binary.open(input_file, std::ifstream::binary);
+
+    if(!binary.is_open())
+    {
+        printf("Error: Couldn't open file %s\n", input_file.c_str());
+        return -1;
+    }
+    else
+    {
+        binary.ignore( std::numeric_limits<std::streamsize>::max() );
+        std::streamsize size = binary.gcount();
+        binary.clear();   //  Since ignore will have set eof.
+        binary.seekg( 0, std::ios_base::beg );
+
+        //Allocate buffer
+        char* buffer = (char*)malloc(size * sizeof(size));
+        //Initialize buffer to 0
+        memset(buffer, 0x00, size);
+
+        //Read data into buffer
+        binary.read(buffer, size);
+
+        //Create new elf reader
+        reader = new elf_reader(buffer, size);
+        
+        //load buffer sections into memory
+        std::cout << "Loading ROM..." << std::endl;
+
+        //Read program headers and initialize into memory
+        for(int i = 0;i < reader->elf32_ehdr.e_phnum;i++)
+        {
+            if(reader->elf32_phdr[i].p_type == PT_LOAD)
+            {
+                //In this case it would be the physical address into memory, because the emulator doesnt support virtual memory yet
+                if(main_memory.initalize(reader->elf32_phdr[i].p_paddr, reader->get_ph_buffer(i), reader->elf32_phdr[i].p_filesz) == false)
+                {
+                    std::cout << "Couln't initialize Section at Address: " << std::hex << reader->elf32_phdr[i].p_paddr << "\n";
+                }
+            }
+        }
+        core = new CORE(reader->elf32_ehdr.e_entry, &bus, &timer);
+        std::vector<symbol32_t>* dumped = reader->dump_symbols();
+        core->attach_debug_symbols(dumped);
+        stop.store(false, std::memory_order_relaxed);
+    }
+
+}
+
+void core_delete()
+{
+    if(reader)
+    {
+       delete reader; 
+    }
+}
+
+gboolean update_gui(gpointer data)
+{
+    int regs[32];
+    for(int i = 0;i < 32;i++) regs[i] = core->get_reg(i);
+    register_tab->update((uint32_t*)regs, core->get_pc(), 0);
+    return true;
+}
+
+void core_thread()
+{
+    while(core->running && (!stop.load(std::memory_order_relaxed)))
+    {
+        core->execute();
+        instruction_counter++;
+        //gtk_main_iteration();
+    }
+    stop.store(true, std::memory_order_relaxed);
+    //update_display.wait();
+    //terminal_handler.wait();
+    core->print_tracing();
+    printf("Execution terminated: %d instructions executed\nExiting Main\n", instruction_counter); 
+}
 
 static void
 activate (GtkApplication *app,
@@ -365,7 +457,6 @@ activate (GtkApplication *app,
 
     //gtk_widget_show(window);                
     //gtk_main();
-
   //window = gtk_application_window_new (app);
   //gtk_window_set_title (GTK_WINDOW (window), "Window");
   //gtk_window_fullscreen(GTK_WINDOW (window));
@@ -379,8 +470,10 @@ activate (GtkApplication *app,
   ///g_signal_connect (button, "clicked", G_CALLBACK (print_hello), NULL);
   //g_signal_connect_swapped (button, "clicked", G_CALLBACK (gtk_widget_destroy), window);
   //gtk_container_add (GTK_CONTAINER (button_box), button);
-
-  gtk_widget_show_all (window);
+    
+    //Initialize Emulator Core
+    gdk_threads_add_idle(update_gui, nullptr);
+    gtk_widget_show_all (window);
 }
 
 static struct argp argp = { options, parse_opt, args_doc, doc, 0, 0, 0 };
@@ -424,9 +517,12 @@ void setup_cmd_options(GtkApplication *app)
                            "int,exec,call,csr\n");
 }
 
+
 int main(int argc, char *argv[])
 {
-
+    //So the emulator waits until the GUI is ready
+    stop = true;
+    
     GtkApplication *app;
     int status;
     
@@ -434,6 +530,13 @@ int main(int argc, char *argv[])
     app = gtk_application_new ("git.bitglitcher.riscv_emu", G_APPLICATION_FLAGS_NONE);
     g_signal_connect (app, "activate", G_CALLBACK (activate), NULL);
     setup_cmd_options(app);
+    //std::future<void> emu_thread = std::async(fake_emulator);
+    //std::future<void> emu_thread = std::async(fake_emulator);
+    std::future<void> clock = std::async(&generate_steady_clock, &timer);
+    std::future<void> update_display = std::async(&display_handler, &display); 
+    std::future<void> terminal_handler = std::async(&terminal_input_handler, &terminal.input_buffer); 
+    core_setup("test_linked.o");
+    std::future<void> core_handler = std::async(&core_thread); 
     status = g_application_run (G_APPLICATION (app), argc, argv);
     g_object_unref (app);
     return 0;
@@ -442,138 +545,27 @@ int main(int argc, char *argv[])
     
 //
     //    return status;
-    struct arguments arguments;
-    arguments.graphical = false;
-    arguments.call_trace = false;
-    arguments.stack_trace = false;
-    argp_parse(&argp, argc, argv, 0, 0, &arguments);
-
-    if(arguments.input_file.empty())
-    {
-        std::cout << "error: no input file\n";
-        exit(1);
-    }
-    else
-    {
-
-        std::cout << "Starting Main\n\n\n\n\n";
-        
-        //Get terminal current state before doing anything weird
-        if(tcgetattr(0, &old_terminal_state) < 0)
-            perror("tcsetattr()");
+    //struct arguments arguments;
+    //arguments.graphical = false;
+    //arguments.call_trace = false;
+    //arguments.stack_trace = false;
+    //argp_parse(&argp, argc, argv, 0, 0, &arguments);
 
 
-        std::ifstream binary;
-        binary.open(arguments.input_file, std::ifstream::binary);
-
-        binary.ignore( std::numeric_limits<std::streamsize>::max() );
-        std::streamsize size = binary.gcount();
-        binary.clear();   //  Since ignore will have set eof.
-        binary.seekg( 0, std::ios_base::beg );
-
-        char* buffer = (char*)malloc(size * sizeof(size));
-        //char* buffer = (char*)calloc(size, sizeof(char));
-
-        memset(buffer, 0x00, size);
-
-        binary.read(buffer, size);
-
-        elf_reader reader(buffer, size);
-        
-        BUS bus;
-        MEMORY main_memory(MEMORY_H_ADDR, MEMORY_L_ADDR, MEMORY_H_ADDR);
-        DISPLAY display(DISPLAY_L_ADDR, DISPLAY_H_ADDR, DISPLAY_HEIGHT, DISPLAY_WIDTH);
-        TERMINAL terminal(TERMINAL_ADDR_L, TERMINAL_ADDR_H);
-        TIMER timer(TIMER_L_ADDR, TIMER_H_ADDR);
-        EXT_MEM ext_mem(EXT_L_ADDR, EXT_H_ADDR);
-        bus.add(&main_memory);
-        bus.add(&terminal);
-        bus.add(&display);
-        bus.add(&timer);
-        bus.add(&ext_mem);
-
-
-        std::cout << "Loading ROM..." << std::endl;
-        //Read program headers and initialize into memory
-        for(int i = 0;i < reader.elf32_ehdr.e_phnum;i++)
-        {
-            if(reader.elf32_phdr[i].p_type == PT_LOAD)
-            {
-                //In this case it would be the physical address into memory, because the emulator doesnt support virtual memory yet
-                if(main_memory.initalize(reader.elf32_phdr[i].p_paddr, reader.get_ph_buffer(i), reader.elf32_phdr[i].p_filesz) == false)
-                {
-                    std::cout << "Couln't initialize Section at Address: " << std::hex << reader.elf32_phdr[i].p_paddr << "\n";
-                }
-            }
-        }
-
-        //for(int i = 0; i < size;i++)
-        //{
-        //    //std::cout << i << ": " << std::hex << (int)buffer[i] << std::endl;
-        //    main_memory.write(buffer[i], i);
-        //    printf("\r%d of %d", i, size);
-        //}
-        //std::cout << "\nROM Loaded" << std::endl;  
-        
-        CORE core(reader.elf32_ehdr.e_entry, &bus, &timer);
-        std::vector<symbol32_t>* dumped = reader.dump_symbols();
-        core.attach_debug_symbols(dumped);
-        stop.store(false, std::memory_order_relaxed);
-
-        std::future<void> clock = std::async(&generate_steady_clock, &timer);
-        std::future<void> update_display = std::async(&display_handler, &display); 
-        std::future<void> terminal_handler = std::async(&terminal_input_handler, &terminal.input_buffer); 
-        
-        #ifdef __TIMER_RTC_TEST__
-        std::cout << "----------------------------------------------------\n";
-        std::cout << "-----------------Testing Timer RTC------------------\n";
-        std::cout << "----------------------------------------------------\n";
-        {
-            uint64_t inc = (timer.read32(TIMER_TIME_L_ADDR) | ((uint64_t)timer.read32(TIMER_TIME_H_ADDR) << 32));
-            printf("timecmp 0x%016llx time 0x%016llx %s\n", timer.timers.timecmp, timer.timers.time, (timer.interrupt.load(std::memory_order_relaxed)? "IRQ Enabled": "IRQ Disabled"));
-            printf("Setting up timecmp to: 0x%016llx time 0x%016llx %s\n", inc, timer.timers.time, (timer.interrupt.load(std::memory_order_relaxed)? "IRQ Enabled": "IRQ Disabled"));
-            timer.write32(inc&0xffffffff, TIMER_CMP_L_ADDR);
-            timer.write32(((inc >> 32) & 0xffffffff), TIMER_CMP_H_ADDR);
-        }
-        while(true)
-        {
-            //std::this_thread::sleep_for(50ms);
-                //timer.write32(0xffffffff, TIMER_CMP_L_ADDR);
-                //timer.write32(0xffffffff, TIMER_CMP_H_ADDR);
-
-            if(timer.interrupt.load(std::memory_order_relaxed))
-            {
-            printf("timecmp 0x%016llx time 0x%016llx %s\n", timer.timers.timecmp, timer.timers.time, (timer.interrupt.load(std::memory_order_relaxed)? "IRQ Enabled": "IRQ Disabled"));
-                uint64_t inc = (timer.read32(TIMER_TIME_L_ADDR) | ((uint64_t)timer.read32(TIMER_TIME_H_ADDR) << 32));
-                inc+=0x1fff;
-                //timer.write32(timer.read32(TIMER_L_ADDR)+0xffffffff, TIMER_CMP_L_ADDR);
-                //timer.write32(timer.read32(TIMER_L_ADDR)+0xfffff, TIMER_CMP_L_ADDR);
-                timer.write32(inc&0xffffffff, TIMER_CMP_L_ADDR);
-                timer.write32(((inc >> 32) & 0xffffffff), TIMER_CMP_H_ADDR);
-            }
-
-        }
-        #endif
+    std::cout << "Starting Main\n\n\n\n\n";
+    
+    //Get terminal current state before doing anything weird
+    if(tcgetattr(0, &old_terminal_state) < 0)
+        perror("tcsetattr()");
 //
-        #ifdef __INS_COUNT__
-            signal(SIGALRM, &sigalrm_handler);  // set a signal handler
-            signal(SIGINT, &sig_int_handler);  // set a signal handler for interrupt request
-            alarm(1);  // set an alarm for 10 seconds from now
-        #endif
+    #ifdef __INS_COUNT__
+        signal(SIGALRM, &sigalrm_handler);  // set a signal handler
+        signal(SIGINT, &sig_int_handler);  // set a signal handler for interrupt request
+        alarm(1);  // set an alarm for 10 seconds from now
+    #endif
+    std::cout << "Restoring terminal defaults\n";
+    if(tcsetattr(0, TCSADRAIN, &old_terminal_state) < 0)
+        perror("tcsetattr ~ICANON");
 
-        while(core.running && (!stop.load(std::memory_order_relaxed)))
-        {
-            core.execute();
-            instruction_counter++;
-        }
-        stop.store(true, std::memory_order_relaxed);
-        update_display.wait();
-        terminal_handler.wait();
-        core.print_tracing();
-        printf("Execution terminated: %d instructions executed\nExiting Main\n", instruction_counter); 
-        std::cout << "Restoring terminal defaults\n";
-        if(tcsetattr(0, TCSADRAIN, &old_terminal_state) < 0)
-            perror("tcsetattr ~ICANON");
-    }
     return 0;
 }
