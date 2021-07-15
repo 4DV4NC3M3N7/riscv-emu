@@ -85,6 +85,7 @@ class CORE
     void print_ccr();
     void print_regs();
     uint32_t get_reg(int);
+    uint32_t get_pc();
 
     void attach_debug_symbols(std::vector<symbol32_t>* symbol_table);
     void debug_options(debug_options_t debug_options);

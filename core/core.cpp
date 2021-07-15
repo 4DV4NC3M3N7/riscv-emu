@@ -56,6 +56,11 @@ CORE::CORE(uint32_t startup_vector, BUS* bus, TIMER* timer)
     }
 }
 
+uint32_t CORE::get_pc()
+{
+    return PC;
+}
+
 void CORE::event(int32_t event)
 {
     //Increment all counters with the selected event
@@ -105,7 +110,7 @@ void CORE::print_status()
     bool unaligned = false;
     for(int i = 0;i < (sizeof(field_size)/sizeof(int));i++)
     {
-        //std::cout << " " << shamt << " ";
+        //std:: << " " << shamt << " ";
         if(field_size[i] == 1)
         {
             if(unaligned)
@@ -140,8 +145,7 @@ void CORE::print_status()
         
     }
     std::cout << std::endl;
-}
-
+}                           
 void CORE::print_regs()
 {
     std::string registers [] = {"zero", "ra", "sp", "gp", "tp", "t0", "t1", "t2", "fp", "s1", "a0",
