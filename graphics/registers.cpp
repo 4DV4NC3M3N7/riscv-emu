@@ -94,7 +94,7 @@ GtkWidget* registers::get_widget()
     return GTK_WIDGET(grid);
 }
 
-void registers::update(uint32_t* regs, __uint32_t PC, __uint32_t IR)
+void registers::update(uint32_t* regs, uint32_t PC, uint32_t IR)
 {
     //Update all gtk entries with new values
     for(int i = 0;i < register_fields.size();i++)
@@ -115,5 +115,4 @@ void registers::update(uint32_t* regs, __uint32_t PC, __uint32_t IR)
             }
         }
     }
-
 }
