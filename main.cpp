@@ -95,41 +95,6 @@ void display_handler(DISPLAY* display)
     sf::Vector2f sprite_scale;
     sf::VertexArray line(sf::Lines, 2);
 
-    graphics::container test_container(graphics::FULL_SCREEN, graphics::VERTICAL, &window);
-    test_container.position = sf::Vector2f(0,0);
-    test_container.pannels.push_back((graphics::pannel_t)
-    {
-        .stick_to = graphics::UP,
-        .arrangement = graphics::VERTICAL,
-        .size = 80
-    });
-    test_container.pannels.push_back((graphics::pannel_t)
-    {
-        .stick_to = graphics::UP,
-        .arrangement = graphics::VERTICAL,
-        .size = 80
-    });
-    test_container.pannels.push_back((graphics::pannel_t)
-    {
-        .stick_to = graphics::UP,
-        .arrangement = graphics::VERTICAL,
-        .size = 80
-    });
-    test_container.pannels.push_back((graphics::pannel_t)
-    {
-        .stick_to = graphics::UP,
-        .arrangement = graphics::VERTICAL,
-        .size = 80
-    });
-    test_container.pannels.push_back((graphics::pannel_t)
-    {
-        .stick_to = graphics::UP,
-        .arrangement = graphics::VERTICAL,
-        .size = 80
-    });
-
-    test_container.fit_pannels = true;
-
     while(!stop.load(std::memory_order_relaxed))
     {
         while (window.isOpen())
