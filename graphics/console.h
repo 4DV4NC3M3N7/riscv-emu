@@ -1,3 +1,4 @@
+#pragma once
 #include <queue>
 #include <string>
 #include <gtk-3.0/gtk/gtk.h>
@@ -12,7 +13,7 @@ class console
         ~console();
 
         //This function will update the input and output buffer from the terminal
-        //Can only be called from the emulator. Once certain theshhold.
+        //Can be called from the emulator or the main thread. Once certain theshhold.
         void update(std::queue<char>& input, std::queue<char>& output);
         //This function should be called to add a backspace to the input buffer
         void signal_backspace (GtkTextView *text_view, gpointer user_data);
