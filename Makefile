@@ -1,6 +1,6 @@
 CFLAGS=-lsfml-graphics -lsfml-window -lsfml-system -lpthread -g `pkg-config --cflags gtk+-3.0` `pkg-config --libs gtk+-3.0`
 
-all: terminal.o core.o memory.o device.o bus.o display.o ext_mem.o timer.o elf.o elf_tables.o graphics.o registers.o console.o riscv_emu
+all: terminal.o core.o memory.o device.o bus.o display.o ext_mem.o timer.o elf.o elf_tables.o graphics.o registers.o console.o log.o riscv_emu
 
 terminal.o: terminal/terminal.cpp terminal/terminal.h debug.h
 	g++ terminal/terminal.cpp -c
@@ -41,8 +41,11 @@ registers.o: graphics/registers.cpp graphics/registers.h
 console.o: graphics/console.h graphics/console.cpp
 	g++ graphics/console.cpp $(CFLAGS) -c
 
-riscv_emu: main.cpp terminal.o core.o memory.o device.o bus.o display.o ext_mem.o timer.o debug.h elf.o elf_tables.o graphics.o registers.o console.o
-	g++ main.cpp terminal.o memory.o core.o bus.o device.o display.o ext_mem.o timer.o elf.o elf_tables.o graphics.o registers.o  console.o $(CFLAGS) -o riscv_emu
+log.o: graphics/log.h graphics/log.cpp
+	g++ graphics/log.cpp $(CFLAGS) -c
+
+riscv_emu: main.cpp terminal.o core.o memory.o device.o bus.o display.o ext_mem.o timer.o debug.h elf.o elf_tables.o graphics.o registers.o console.o log.o
+	g++ main.cpp terminal.o memory.o core.o bus.o device.o display.o ext_mem.o timer.o elf.o elf_tables.o graphics.o registers.o  console.o log.o $(CFLAGS) -o riscv_emu
 
 
 clean:
