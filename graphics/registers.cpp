@@ -1,6 +1,7 @@
 #include <gtk-3.0/gtk/gtk.h>
 #include <gtk-3.0/gtk/gtkbuilder.h>
 #include "registers.h"
+#include <sstream>
 
 registers::registers(/* args */)
 {
@@ -96,22 +97,29 @@ GtkWidget* registers::get_widget()
 
 void registers::update(uint32_t* regs, uint32_t PC, uint32_t IR)
 {
+    std::stringstream stream;
     //Update all gtk entries with new values
     for(int i = 0;i < register_fields.size();i++)
     {
         if(i < 32)
         {
-            gtk_entry_set_text(register_fields[i]->entry, std::to_string(regs[i]).c_str());
+            stream.str(std::string());
+            stream << std::hex << "0x" << (regs[i] & 0xffffffff);
+            gtk_entry_set_text(register_fields[i]->entry, stream.str().c_str());
         }
         else
         {
             if(i == 32)
             {
-                gtk_entry_set_text(register_fields[i]->entry, std::to_string(PC).c_str());
+                stream.str(std::string());
+                stream << std::hex << "0x" << (PC & 0xffffffff);
+                gtk_entry_set_text(register_fields[i]->entry, stream.str().c_str());
             }
             else if(i == 33)
             {
-                gtk_entry_set_text(register_fields[i]->entry, std::to_string(IR).c_str());
+                stream.str(std::string());
+                stream << std::hex << "0x" << (IR & 0xffffffff);
+                gtk_entry_set_text(register_fields[i]->entry, stream.str().c_str());
             }
         }
     }
