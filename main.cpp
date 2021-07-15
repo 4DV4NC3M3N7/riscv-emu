@@ -29,6 +29,7 @@
 #include <gdk/gdk.h>
 #include "graphics/registers.h"
 #include "graphics/console.h"
+#include "graphics/log_console.h"
 
 
 char getch(void)
@@ -326,6 +327,7 @@ std::atomic<bool> fast_mode;
 //Different tabs that must be created at runtime
 registers* register_tab;
 console* console_tab;
+log_console* log_tab;
 
 BUS bus;
 MEMORY main_memory(MEMORY_H_ADDR, MEMORY_L_ADDR, MEMORY_H_ADDR);
