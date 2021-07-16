@@ -60,12 +60,12 @@ int log_console::save(std::string file)
     }
 }
 //Attach tab to notebook
-void log_console::attack_to_notebook(GtkNotebook* notebook)
+void log_console::attach_to_notebook(GtkNotebook* notebook)
 {
     gtk_notebook_append_page(notebook, text_view, tab_label);
 }
 //Deattach tab to notebook
-void log_console::deattack_to_notebook(GtkNotebook* notebook)
+void log_console::deattach_to_notebook(GtkNotebook* notebook)
 {
     gtk_notebook_detach_tab(notebook, text_view);
 }

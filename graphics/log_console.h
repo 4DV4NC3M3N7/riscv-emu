@@ -32,9 +32,9 @@ class log_console
         //Save logged messages
         int save(std::string file);
         //Attach tab to notebook
-        void attack_to_notebook(GtkNotebook* notebook);
+        void attach_to_notebook(GtkNotebook* notebook);
         //Deattach tab to notebook
-        void deattack_to_notebook(GtkNotebook* notebook);
+        void deattach_to_notebook(GtkNotebook* notebook);
     private:
         std::vector<message_t> msg_buffer;
         GtkWidget* tab_label;

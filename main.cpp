@@ -420,7 +420,6 @@ activate (GtkApplication *app,
     gtk_builder_add_from_file (builder, "layout.glade", NULL);
     
     GtkCssProvider* gtkcssprovider = gtk_css_provider_new();
-    gtk_css_provider_load_from_path (gtkcssprovider, "styles.css", NULL);
 
     window = GTK_WIDGET(gtk_builder_get_object(builder, "window_main"));
     gtk_builder_connect_signals(builder, NULL);
@@ -438,7 +437,7 @@ activate (GtkApplication *app,
     //Attack tabs
     register_tab->attach_to_notebook(GTK_NOTEBOOK(main_context));
     console_tab->attach_to_notebook(GTK_NOTEBOOK(context1));
-    log_tab->attack_to_notebook(GTK_NOTEBOOK(context2));
+    log_tab->attach_to_notebook(GTK_NOTEBOOK(context2));
     //g_object_unref(builder);
 
     //gtk_widget_show(window);                
