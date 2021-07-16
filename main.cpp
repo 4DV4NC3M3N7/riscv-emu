@@ -356,7 +356,7 @@ int core_setup(std::string input_file)
         core->attach_debug_symbols(dumped);
         stop.store(false, std::memory_order_relaxed);
     }
-
+    return 0;
 }
 
 void core_delete()
@@ -375,8 +375,21 @@ gboolean update_gui(gpointer data)
     return true;
 }
 
+gboolean update_terminal_gui(gpointer data)
+{
+    //Update terminal
+    while(terminal.lock.try_lock() != -1)
+    {
+        //Update gui   
+        console_tab->update(terminal.input_buffer, terminal.output_buffer);
+        terminal.lock.unlock();
+        return true;
+    }
+}
 void core_thread()
 {
+
+    std::this_thread::sleep_for(2s);
     while(core->running && (!stop.load(std::memory_order_relaxed)))
     {
         core->execute();
@@ -413,13 +426,16 @@ activate (GtkApplication *app,
 
     GtkWidget* main_context = GTK_WIDGET(gtk_builder_get_object(builder, "main_context"));
     GtkWidget* context1 = GTK_WIDGET(gtk_builder_get_object(builder, "context1"));
+    GtkWidget* context2 = GTK_WIDGET(gtk_builder_get_object(builder, "context2"));
     
     register_tab = new registers;
     console_tab = new console;
+    log_tab = new log_console;
 
     //Attack tabs
     register_tab->attach_to_notebook(GTK_NOTEBOOK(main_context));
     console_tab->attach_to_notebook(GTK_NOTEBOOK(context1));
+    log_tab->attack_to_notebook(GTK_NOTEBOOK(context2));
     //g_object_unref(builder);
 
     //gtk_widget_show(window);                
@@ -440,6 +456,7 @@ activate (GtkApplication *app,
     
     //Initialize Emulator Core
     gdk_threads_add_idle(update_gui, nullptr);
+    gdk_threads_add_timeout(500, update_terminal_gui, nullptr);
     gtk_widget_show_all (window);
 }
 
@@ -493,7 +510,9 @@ int main(int argc, char *argv[])
     GtkApplication *app;
     int status;
     
-    //gtk_init(&argc, &argv);
+    //Set graphical mode for the terminal
+    terminal.graphical = true;
+    
     app = gtk_application_new ("git.bitglitcher.riscv_emu", G_APPLICATION_FLAGS_NONE);
     g_signal_connect (app, "activate", G_CALLBACK (activate), NULL);
     setup_cmd_options(app);
