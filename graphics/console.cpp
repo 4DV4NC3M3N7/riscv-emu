@@ -18,6 +18,9 @@ console::console(/* args */)
     //Create text view
     console_txt_vw = gtk_text_view_new_with_buffer(buffer);
     gtk_text_view_set_editable(GTK_TEXT_VIEW(console_txt_vw), true);
+    //Create scrolled window
+    scrolled_window = gtk_scrolled_window_new (NULL, NULL);
+    gtk_container_add(GTK_CONTAINER(scrolled_window), console_txt_vw);
 }
 
 console::~console()
@@ -37,9 +40,10 @@ void console::update(std::queue<char>& input, std::queue<char>& output)
     for(int i = 0;i < output.size();i++)
     {   
         output_chars.push_back(output.front());
+        gtk_text_buffer_insert_at_cursor (buffer, std::string(1, output.front()).c_str(), 1);
         output.pop();
     }
-    gtk_text_buffer_set_text(buffer, output_chars.c_str(), output_chars.size());
+    //gtk_text_buffer_set_text(buffer, output_chars.c_str(), output_chars.size());
 }
 
 void console::signal_backspace(GtkTextView *text_view, gpointer user_data)
@@ -50,9 +54,9 @@ void console::signal_backspace(GtkTextView *text_view, gpointer user_data)
 
 void console::attach_to_notebook(GtkNotebook* notebook)
 {
-    gtk_notebook_append_page(notebook, console_txt_vw, tab_label);
+    gtk_notebook_append_page(notebook, scrolled_window, tab_label);
 }
 void console::deattach_to_notebook(GtkNotebook* notebook)
 {
-    gtk_notebook_detach_tab(notebook, console_txt_vw);
+    gtk_notebook_detach_tab(notebook, scrolled_window);
 }

@@ -30,4 +30,5 @@ class console
         GtkTextTagTable* tagtable;
         GtkTextBuffer* buffer;
         GtkWidget* console_txt_vw;
+        GtkWidget* scrolled_window;
 };
