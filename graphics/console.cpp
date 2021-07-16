@@ -4,6 +4,7 @@
 #include <gtk-3.0/gtk/gtkbuilder.h>
 #include <gdk/gdk.h>
 #include "console.h"
+#include <iostream>
 
 
 
@@ -16,6 +17,7 @@ console::console(/* args */)
     gtk_text_buffer_set_text(buffer, "", 0);
     //Create text view
     console_txt_vw = gtk_text_view_new_with_buffer(buffer);
+    gtk_text_view_set_editable(GTK_TEXT_VIEW(console_txt_vw), true);
 }
 
 console::~console()
@@ -33,10 +35,11 @@ void console::update(std::queue<char>& input, std::queue<char>& output)
 
     //Push output characters into output buffer
     for(int i = 0;i < output.size();i++)
-    {
-        output_chars.push(output.front());
+    {   
+        output_chars.push_back(output.front());
         output.pop();
     }
+    gtk_text_buffer_set_text(buffer, output_chars.c_str(), output_chars.size());
 }
 
 void console::signal_backspace(GtkTextView *text_view, gpointer user_data)

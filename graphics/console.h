@@ -24,7 +24,7 @@ class console
         //Input from the user
         std::queue<char> input_chars;
         //Output from the emulator
-        std::queue<char> output_chars;
+        std::string output_chars;
 
         GtkWidget* tab_label;
         GtkTextTagTable* tagtable;// = gtk_text_tag_table_new();
