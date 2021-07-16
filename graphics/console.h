@@ -27,8 +27,7 @@ class console
         std::string output_chars;
 
         GtkWidget* tab_label;
-        GtkTextTagTable* tagtable;// = gtk_text_tag_table_new();
-        GtkTextBuffer* buffer;// = gtk_text_buffer_new(tagtable);(
-        GtkWidget* console_txt_vw;// = gtk_text_view_new_with_buffer(buffer);
-        /* data */
+        GtkTextTagTable* tagtable;
+        GtkTextBuffer* buffer;
+        GtkWidget* console_txt_vw;
 };
