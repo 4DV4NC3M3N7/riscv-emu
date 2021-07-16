@@ -2,6 +2,7 @@
 #include <gtk-3.0/gtk/gtkbuilder.h>
 #include "registers.h"
 #include <sstream>
+#include <iomanip>
 
 registers::registers(/* args */)
 {
@@ -23,6 +24,8 @@ registers::registers(/* args */)
         regs_t* register_field = new regs_t;
         register_field->entry = GTK_ENTRY(gtk_entry_new());
         gtk_entry_set_text(register_field->entry, "0x00000000");
+        GtkStyleContext* context = gtk_widget_get_style_context(GTK_WIDGET(register_field->entry));
+        gtk_style_context_add_class(GTK_STYLE_CONTEXT(context), "monospace");
         gtk_entry_set_max_width_chars(register_field->entry, strlen("0x00000000"));
         gtk_entry_set_width_chars(register_field->entry, strlen("0x00000000"));
         register_field->label = GTK_LABEL(gtk_label_new(register_names[i].c_str()));
@@ -104,7 +107,7 @@ void registers::update(uint32_t* regs, uint32_t PC, uint32_t IR)
         if(i < 32)
         {
             stream.str(std::string());
-            stream << std::hex << "0x" << (regs[i] & 0xffffffff);
+            stream << "0x" << std::setfill('0') << std::setw(8) << std::hex << (regs[i] & 0xffffffff);
             gtk_entry_set_text(register_fields[i]->entry, stream.str().c_str());
         }
         else
@@ -112,13 +115,13 @@ void registers::update(uint32_t* regs, uint32_t PC, uint32_t IR)
             if(i == 32)
             {
                 stream.str(std::string());
-                stream << std::hex << "0x" << (PC & 0xffffffff);
+                stream << "0x" << std::setfill('0') << std::setw(8) << std::hex << (PC & 0xffffffff);
                 gtk_entry_set_text(register_fields[i]->entry, stream.str().c_str());
             }
             else if(i == 33)
             {
                 stream.str(std::string());
-                stream << std::hex << "0x" << (IR & 0xffffffff);
+                stream << "0x" << std::setfill('0') << std::setw(8) << std::hex << (IR & 0xffffffff);
                 gtk_entry_set_text(register_fields[i]->entry, stream.str().c_str());
             }
         }
