@@ -175,7 +175,7 @@
             <property name="can-focus">False</property>
             <property name="orientation">vertical</property>
             <child>
-              <object class="GtkToolbar">
+              <object class="GtkToolbar" id="toolbar1">
                 <property name="height-request">30</property>
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
@@ -196,15 +196,12 @@
                     <property name="can-focus">False</property>
                     <property name="orientation">vertical</property>
                     <child>
-                      <object class="GtkGLArea" id="display">
-                        <property name="width-request">500</property>
-                        <property name="height-request">500</property>
+                      <object class="GtkDrawingArea" id="frame">
                         <property name="visible">True</property>
-                        <property name="app-paintable">True</property>
                         <property name="can-focus">False</property>
                       </object>
                       <packing>
-                        <property name="expand">True</property>
+                        <property name="expand">False</property>
                         <property name="fill">True</property>
                         <property name="position">0</property>
                       </packing>
@@ -213,6 +210,7 @@
                       <object class="GtkNotebook" id="context1">
                         <property name="visible">True</property>
                         <property name="can-focus">True</property>
+                        <property name="vexpand">True</property>
                         <child>
                           <placeholder/>
                         </child>
@@ -235,6 +233,7 @@
                       <packing>
                         <property name="expand">True</property>
                         <property name="fill">True</property>
+                        <property name="pack-type">end</property>
                         <property name="position">1</property>
                       </packing>
                     </child>
@@ -250,6 +249,8 @@
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
                     <property name="margin-left">5</property>
+                    <property name="hexpand">True</property>
+                    <property name="vexpand">True</property>
                     <child>
                       <placeholder/>
                     </child>
@@ -272,7 +273,7 @@
                   <packing>
                     <property name="expand">True</property>
                     <property name="fill">True</property>
-                    <property name="position">1</property>
+                    <property name="position">2</property>
                   </packing>
                 </child>
               </object>
@@ -311,6 +312,7 @@
               <packing>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
+                <property name="pack-type">end</property>
                 <property name="position">2</property>
               </packing>
             </child>
