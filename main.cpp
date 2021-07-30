@@ -403,6 +403,54 @@ void core_thread()
     printf("Execution terminated: %d instructions executed\nExiting Main\n", instruction_counter); 
 }
 
+gboolean
+draw_callback (GtkWidget *widget, cairo_t *cr, gpointer data)
+{
+    guint width, height;
+    GdkRGBA color;
+    GtkStyleContext *context;
+
+    context = gtk_widget_get_style_context (widget);
+
+    width = gtk_widget_get_allocated_width (widget);
+    height = gtk_widget_get_allocated_height (widget);
+
+    int row_stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, width);
+    unsigned char* pixels = (unsigned char *) calloc(sizeof(unsigned char) * row_stride * height, 1);
+    memcpy(pixels, display.frame_buffer, 4*width*height);
+    cairo_surface_t *surface;
+    surface = cairo_image_surface_create_for_data(pixels,CAIRO_FORMAT_ARGB32, width, height, row_stride);
+    cairo_set_source_surface(cr, surface, 0, 0);
+    cairo_paint(cr);  
+    return true;
+}
+
+gboolean update_frame(gpointer data)
+{
+    GtkWidget *widget = (GtkWidget*)data;
+    gtk_widget_queue_draw(widget);
+    // guint width, height;
+    // GdkRGBA color;
+    // GtkStyleContext *context;
+
+    // context = gtk_widget_get_style_context (widget);
+
+    // width = gtk_widget_get_allocated_width (widget);
+    // height = gtk_widget_get_allocated_height (widget);
+
+    // int row_stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, width);
+    // unsigned char* pixels = (unsigned char *) calloc(sizeof(unsigned char) * row_stride * height, 1);
+    // memcpy(pixels, display.frame_buffer, 4*width*height);
+    // cairo_surface_t *surface;
+    // surface = cairo_image_surface_create_for_data(pixels,CAIRO_FORMAT_ARGB32, width, height, row_stride);
+    // cairo_t *cr = cairo_create(surface);
+    // cairo_set_source_surface(cr, surface, 0, 0);
+    // cairo_paint(cr); 
+    // cairo_destroy(cr); 
+    // cairo_surface_destroy(surface);
+    return true;
+}
+
 static void
 activate (GtkApplication *app,
           gpointer        user_data)
@@ -420,6 +468,16 @@ activate (GtkApplication *app,
     gtk_builder_add_from_file (builder, "layout.glade", NULL);
     
     GtkCssProvider* gtkcssprovider = gtk_css_provider_new();
+    GdkDisplay *display = gdk_display_get_default();
+    GdkScreen *screen = gdk_display_get_default_screen (display);
+    gtk_css_provider_load_from_path (gtkcssprovider, "styles.css", NULL);
+    gtk_style_context_add_provider_for_screen (screen, GTK_STYLE_PROVIDER(gtkcssprovider), GTK_STYLE_PROVIDER_PRIORITY_USER);
+
+        // GtkCssProvider *provider = gtk_css_provider_new ();
+        // gtk_css_provider_load_from_path (provider, "styles.css", NULL);
+        // gtk_style_context_add_provider (context,
+        //                             GTK_STYLE_PROVIDER(provider),
+        //                             GTK_STYLE_PROVIDER_PRIORITY_USER);
 
     window = GTK_WIDGET(gtk_builder_get_object(builder, "window_main"));
     gtk_builder_connect_signals(builder, NULL);
@@ -429,6 +487,11 @@ activate (GtkApplication *app,
     GtkWidget* main_context = GTK_WIDGET(gtk_builder_get_object(builder, "main_context"));
     GtkWidget* context1 = GTK_WIDGET(gtk_builder_get_object(builder, "context1"));
     GtkWidget* context2 = GTK_WIDGET(gtk_builder_get_object(builder, "context2"));
+
+    GtkWidget* drawing_area = GTK_WIDGET(gtk_builder_get_object(builder, "frame"));
+    gtk_widget_set_size_request (drawing_area, 500, 500);
+    g_signal_connect (G_OBJECT (drawing_area), "draw",
+    G_CALLBACK (draw_callback), NULL);
     
     register_tab = new registers;
     console_tab = new console;
@@ -459,6 +522,7 @@ activate (GtkApplication *app,
     //Initialize Emulator Core
     gdk_threads_add_idle(update_gui, nullptr);
     gdk_threads_add_timeout(500, update_terminal_gui, nullptr);
+    gdk_threads_add_timeout(16, update_frame, drawing_area);
     gtk_widget_show_all (window);
 }
 
@@ -521,7 +585,7 @@ int main(int argc, char *argv[])
     //std::future<void> emu_thread = std::async(fake_emulator);
     //std::future<void> emu_thread = std::async(fake_emulator);
     std::future<void> clock = std::async(&generate_steady_clock, &timer);
-    std::future<void> update_display = std::async(&display_handler, &display); 
+    //std::future<void> update_display = std::async(&display_handler, &display); 
     std::future<void> terminal_handler = std::async(&terminal_input_handler, &terminal.input_buffer); 
     core_setup("test_linked.o");
     std::future<void> core_handler = std::async(&core_thread); 
