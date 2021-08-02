@@ -385,6 +385,7 @@ gboolean update_terminal_gui(gpointer data)
         terminal.lock.unlock();
         return true;
     }
+    return true;
 }
 void core_thread()
 {
@@ -403,25 +404,29 @@ void core_thread()
     printf("Execution terminated: %d instructions executed\nExiting Main\n", instruction_counter); 
 }
 
+struct draw_area_data_struct
+{
+    guint width, height;
+    GtkStyleContext *context;
+    cairo_surface_t *surface;
+    unsigned char* pixels;
+    int row_stride;
+} gtk_area_data;
+
 gboolean
 draw_callback (GtkWidget *widget, cairo_t *cr, gpointer data)
 {
-    guint width, height;
-    GdkRGBA color;
-    GtkStyleContext *context;
-
-    context = gtk_widget_get_style_context (widget);
-
-    width = gtk_widget_get_allocated_width (widget);
-    height = gtk_widget_get_allocated_height (widget);
-
-    int row_stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, width);
-    unsigned char* pixels = (unsigned char *) calloc(sizeof(unsigned char) * row_stride * height, 1);
-    memcpy(pixels, display.frame_buffer, 4*width*height);
-    cairo_surface_t *surface;
-    surface = cairo_image_surface_create_for_data(pixels,CAIRO_FORMAT_ARGB32, width, height, row_stride);
-    cairo_set_source_surface(cr, surface, 0, 0);
+    gtk_area_data.width = gtk_widget_get_allocated_width (widget);
+    gtk_area_data.height = gtk_widget_get_allocated_height (widget);
+    gtk_area_data.context = gtk_widget_get_style_context (widget);
+    gtk_area_data.row_stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, gtk_area_data.width);
+    gtk_area_data.pixels =  (unsigned char *) calloc(sizeof(unsigned char) * gtk_area_data.row_stride * gtk_area_data.height, 1);
+    memcpy(gtk_area_data.pixels, display.frame_buffer, 4*gtk_area_data.width*gtk_area_data.height);
+    gtk_area_data.surface = cairo_image_surface_create_for_data(gtk_area_data.pixels,CAIRO_FORMAT_ARGB32, gtk_area_data.width, gtk_area_data.height, gtk_area_data.row_stride);
+    cairo_set_source_surface(cr, gtk_area_data.surface, 0, 0);
     cairo_paint(cr);  
+    cairo_surface_destroy(gtk_area_data.surface);
+    free(gtk_area_data.pixels);
     return true;
 }
 
@@ -447,7 +452,6 @@ gboolean update_frame(gpointer data)
     // cairo_set_source_surface(cr, surface, 0, 0);
     // cairo_paint(cr); 
     // cairo_destroy(cr); 
-    // cairo_surface_destroy(surface);
     return true;
 }
 
